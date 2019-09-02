@@ -262,7 +262,7 @@ class FoliumTable {
             const rowClass = i % 2 === 0 ? 'evenRow' : 'oddRow';
             const updateIndex = i + 1;
 
-            $(`#${this.tableId} tr:eq(${updateIndex})`).removeClass().toggleClass(rowClass);
+            $(`#${this.tableId} tr:eq(${updateIndex})`).removeClass().addClass(rowClass);
         }
 
     }
