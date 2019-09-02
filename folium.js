@@ -1,6 +1,5 @@
 /**
  * TODO:
- * Sortable numbers, float etc.
  */
 class FoliumTable {
     
@@ -44,7 +43,8 @@ class FoliumTable {
             table.append('</tbody>');
 
             // Init selectedRowFeature
-        $(`#${settings.tableId} td`).click(function(){
+        $(`#${settings.tableId}`).on('click', 'td', function(){
+            console.log('asdsad');
             const selectedRowObject = $(this).parent();
             const selectedColumnObject = $(this);
 
@@ -56,7 +56,7 @@ class FoliumTable {
 
          });
 
-         $(`#${settings.tableId} td`).dblclick(function() {
+         $(`#${settings.tableId}`).on('dblclick', 'td', function() {
             const ENTER_KEY_CODE = 13;
             if (!settings.editable) return;
 
@@ -83,11 +83,6 @@ class FoliumTable {
             });
 
          });
-
-         $(`#${settings.tableId} td`).keypress(function(evt) {
-            console.log('sdasdsa');
-            
-        });
 
         }
 
@@ -212,6 +207,28 @@ class FoliumTable {
         });
 
 // end
+    }
+
+    addRow(rowObject) {
+        this.settings.rows.push(rowObject);
+        this.rowCount += 1;
+        
+        const rowClass = (this.rowCount - 1) % 2 === 0 ? 'evenRow' : 'oddRow';
+        let rowHTML = `<tr class="${rowClass}">`;
+        
+        this.settings.columns.forEach((column, columnIndex) => {
+            const columnValue = rowObject[column.columnId];
+
+            // Render the value presented from the settings.
+            const value = this.cellRenderer(this.rowCount - 1, columnIndex, columnValue, rowObject);
+            const tdOutput = columnValue === undefined ? '<td></td>' : `<td>${value}</td>`;
+            rowHTML += tdOutput;
+        });
+
+        rowHTML += '</tr>';
+
+        $(`#${this.tableId} tr:last`).after(rowHTML);
+
     }
 
     set selectedRow(rowIndex) {

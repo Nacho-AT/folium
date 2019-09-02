@@ -79,6 +79,7 @@
   <body>
     <div class="wrapper"></div>
     <table id="foliumTable"></table>
+    <button id="addRow">Add New Row</button>
   </body>
   <script type="text/javascript">
     const tableSettings = {
@@ -112,6 +113,12 @@
     };
 
     $('#foliumTable').FoliumTable(tableSettings);
+
+    $('#addRow').click(function() {
+      const foliumTable = $('#foliumTable').FoliumTable();
+
+      foliumTable.addRow({username: 'test', name : "test", surname : "test", emailAddress : 'test@test.com', age : 50, phoneNumber : '+1 11 111 11 11', nationality : 'N/A', location : 'New York/NY'});
+    });
 
 </script>
 </html>
