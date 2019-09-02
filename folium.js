@@ -44,7 +44,6 @@ class FoliumTable {
 
             // Init selectedRowFeature
         $(`#${settings.tableId}`).on('click', 'td', function(){
-            console.log('asdsad');
             const selectedRowObject = $(this).parent();
             const selectedColumnObject = $(this);
 
@@ -228,6 +227,43 @@ class FoliumTable {
         rowHTML += '</tr>';
 
         $(`#${this.tableId} tr:last`).after(rowHTML);
+
+    }
+
+    updateRow(index, rowObject) {
+
+        const rowToUpdate = this.settings.rows[index];
+
+        Object.keys(rowObject).forEach(property => rowToUpdate[property] = rowObject[property]);
+
+        let rowHTML = '';
+        
+        this.settings.columns.forEach((column, columnIndex) => {
+            const columnValue = rowToUpdate[column.columnId];
+
+            // Render the value presented from the settings.
+            const value = this.cellRenderer(this.rowCount - 1, columnIndex, columnValue, rowToUpdate);
+            const tdOutput = columnValue === undefined ? '<td></td>' : `<td>${value}</td>`;
+            rowHTML += tdOutput;
+        });
+        const updateIndex = index + 1;
+        $(`#${this.tableId} tr:eq(${updateIndex})`).html(rowHTML);
+    }
+
+    deleteRow(index) {
+        this.settings.rows.splice(index, index);
+        this.rowCount -= 1;
+
+        const domTableRemoveIndex = index + 1;
+        $(`#${this.tableId} tr:eq(${domTableRemoveIndex})`).remove();
+
+        // Change the row class
+        for (let i = index ; i < this.rowCount ; i++) {
+            const rowClass = i % 2 === 0 ? 'evenRow' : 'oddRow';
+            const updateIndex = i + 1;
+
+            $(`#${this.tableId} tr:eq(${updateIndex})`).removeClass().toggleClass(rowClass);
+        }
 
     }
 

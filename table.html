@@ -80,6 +80,8 @@
     <div class="wrapper"></div>
     <table id="foliumTable"></table>
     <button id="addRow">Add New Row</button>
+    <button id="updateRow">Update Row</button>
+    <button id="removeRow">Remove Row</button>
   </body>
   <script type="text/javascript">
     const tableSettings = {
@@ -118,6 +120,18 @@
       const foliumTable = $('#foliumTable').FoliumTable();
 
       foliumTable.addRow({username: 'test', name : "test", surname : "test", emailAddress : 'test@test.com', age : 50, phoneNumber : '+1 11 111 11 11', nationality : 'N/A', location : 'New York/NY'});
+    });
+
+    $('#updateRow').click(function() {
+      const foliumTable = $('#foliumTable').FoliumTable();
+
+      foliumTable.updateRow(1, {username: 'test', emailAddress : 'updated@mail.com'});
+    });
+
+    $('#removeRow').click(function() {
+      const foliumTable = $('#foliumTable').FoliumTable();
+
+      foliumTable.deleteRow(0);
     });
 
 </script>
