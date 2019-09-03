@@ -71,6 +71,10 @@
         background-color: #38393a;
       }
 
+      .folium:focus {
+        outline: none !important;
+      }
+
 
     </style>
     <script src="jquery-3.3.1.slim.min.js"></script>
@@ -104,6 +108,7 @@
         //width : {size : 1000, unit : 'px'},
         searching : true,
         sortable : true,
+        sortAfterUpdate : true,
         editable : true,
         cellRenderer : function(rowIndex, columnIndex, data, rowObject) {
             if (columnIndex === 0) 
@@ -131,7 +136,7 @@
     $('#removeRow').click(function() {
       const foliumTable = $('#foliumTable').FoliumTable();
 
-      foliumTable.deleteRow(0);
+      foliumTable.deleteRow(1);
     });
 
 </script>
