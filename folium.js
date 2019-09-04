@@ -141,11 +141,6 @@ function FoliumTable(settings, table) {
             settings.rows[rowIndex][columnId] = newValue;
             tdObject.html(newValue);
 
-            if (settings.sortAfterUpdate && selectedColumn !== -1) {
-                sortTable(selectedColumn);
-                initRows(table, settings);
-            }
-
         });
         // If user presses enter then focus out
         $('#cellEditor').keypress(event => {
@@ -278,11 +273,7 @@ function FoliumTable(settings, table) {
     
             rowHTML += '</tr>';
 
-            if (settings.sortAfterUpdate && selectedColumn !== -1) {
-                sortTable(selectedColumn);
-                initRows(table, settings);
-            }
-            else $(`#${tableId} tr:last`).after(rowHTML);
+            $(`#${tableId} tr:last`).after(rowHTML);
     
         }
     
