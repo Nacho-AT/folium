@@ -1,7 +1,3 @@
-/**
- * TODO:
- */
-
 function FoliumTable(settings, table) {
 
     let rowCount = settings.rows.length;
@@ -12,9 +8,11 @@ function FoliumTable(settings, table) {
     let selectedColumnObject = undefined;
     let tableId = settings.tableId;
     let sortingColumnIndex = -1;
+    let cellRenderer = undefined;
 
     const sortingTypes = new Map();
     const columnSortingTypes = new Map();
+    
 
     function setSelectedRow(rowIndex) {
         selectedRow = rowIndex;
@@ -27,6 +25,7 @@ function FoliumTable(settings, table) {
     }
 
     function setSelectedColumn(columnIndex) {
+        if (columnIndex >= columnCount) return;
         $(`#${settings.tableId} th:eq(${selectedColumn})`).removeClass('selectedColumnHeader');
         selectedColumn = columnIndex;
 
@@ -56,7 +55,7 @@ function FoliumTable(settings, table) {
     }
 
     function sortTable(columnIndex) {
-        sortingColumnIndex = columnIndex;
+        if (columnIndex === -1) return;
 
         if (settings.sortable) {
             const columnId = settings.columns[columnIndex].columnId;
@@ -64,7 +63,7 @@ function FoliumTable(settings, table) {
 
             const sortingType = sortingTypes.get(columnId);
             const sortFunction = columnSortingTypes.get(columnSortingType);
-            //TODO: WHY ELEMENTS AREN'T REMOVED?
+          
             settings.rows.sort((a, b) => sortingType * sortFunction(a[columnId], b[columnId]));                
             sortingTypes.set(columnId, sortingType * -1);
 
@@ -81,7 +80,7 @@ function FoliumTable(settings, table) {
         table.append(columnsHTML + '</thead>');
     }
 
-    function initRows(table, settings, cellRenderer) {
+    function initRows(table, settings) {
         table.append('<tbody>');
         settings.rows.forEach((row, index) => {
             const rowClass = index % 2 === 0 ? 'evenRow' : 'oddRow';
@@ -112,36 +111,44 @@ function FoliumTable(settings, table) {
 
         setSelectedRow(rowIndex);
         setSelectedColumn(columnIndex);
-
      });
 
      $(`#${settings.tableId}`).on('dblclick', 'td', function() {
-        const ENTER_KEY_CODE = 13;
-        if (!settings.editable) return;
+        activateCellEditor($(this));
+     });
 
-         const value = $(this).text();
-         const _this = $(this);
-         const inputBoxWidth = _this.css('width');
-       
-         _this.html(`<input type="text" id="cellEditor" style="width:${inputBoxWidth}" value="${value}" />`);
-         const cellEditor = $('#cellEditor');
-         cellEditor.focus();
-         $('#cellEditor').focusout(function() {
-            const rowIndex = _this.parent().index();
-            const columnIndex = _this.index();
+    }
+
+    function activateCellEditor(tdObject) {
+        const ENTER_KEY_CODE = 13;
+        const value = tdObject.text();
+        const inputBoxWidth = tdObject.css('width');
+        const rowIndex = tdObject.parent().index();
+        const columnIndex = tdObject.index();
+            
+        tdObject.html(`<input type="text" id="cellEditor" style="width:${inputBoxWidth}" value="${value}" />`);
+        const cellEditor = $('#cellEditor');
+        cellEditor.focus();
+        $('#cellEditor').focusout(function() {
             const newValue = cellEditor.val();
             //TODO: Sort the array after editing...
             const columnId = settings.columns[columnIndex].columnId;
             settings.rows[rowIndex][columnId] = newValue;
-            _this.html(newValue);
+            tdObject.html(newValue);
+
+            if (settings.sortAfterUpdate && selectedColumn !== -1) {
+                sortTable(selectedColumn);
+                initRows(table, settings);
+            }
+
         });
         // If user presses enter then focus out
         $('#cellEditor').keypress(event => {
-            if (event.keyCode === ENTER_KEY_CODE) $('#cellEditor').focusout();
-        });
-
-     });
-
+            if (event.keyCode === ENTER_KEY_CODE) {
+                setSelectedColumn(columnIndex + 1);
+                table.focus();
+            }
+    });
     }
 
     class FoliumTable {
@@ -158,7 +165,8 @@ function FoliumTable(settings, table) {
             table.attr('tabindex', '0');
     
             this.cellRenderer = settings.cellRenderer !== undefined ? settings.cellRenderer : function(rowIndex, columnIndex, data, rowObject) { return data; };
-    
+            cellRenderer = this.cellRenderer;
+
             if (settings.width !== undefined) {
                 const size = settings.width.size;
                 const unit = settings.width.unit;
@@ -174,7 +182,7 @@ function FoliumTable(settings, table) {
             initColumns(tableColumns);
             
             // Init Rows
-            initRows(table, settings, this.cellRenderer);
+            initRows(table, settings);
     
     
             $('td,th').on('focus', () => {
@@ -197,7 +205,7 @@ function FoliumTable(settings, table) {
     
                 if (settings.sortable) {
                     sortTable(selectedHeaderIndex);
-                    initRows(table, settings, _object.cellRenderer);
+                    initRows(table, settings);
                 }
                 
              });
@@ -212,7 +220,8 @@ function FoliumTable(settings, table) {
                 const UP_ARROW_KEY_CODE = 38;
                 const RIGHT_ARROW_KEY_CODE = 39;
                 const DOWN_ARROW_KEY_CODE = 40;
-    
+                const F2_KEY_CODE = 113;
+
                 if (keyCode === LEFT_ARROW_KEY_CODE) {
                     if (selectedColumn <= 0) return;
                     
@@ -235,6 +244,10 @@ function FoliumTable(settings, table) {
                     setSelectedRow(selectedRow + 1);
                     setSelectedColumn(selectedColumn);
                 }
+
+                if (keyCode === F2_KEY_CODE) {
+                    activateCellEditor(selectedColumnObject);
+                }
                 
             });
     
@@ -243,12 +256,6 @@ function FoliumTable(settings, table) {
     
         addRow(rowObject) {
             settings.rows.push(rowObject);
-    
-            if (settings.sortAfterUpdate) {
-                //TODO: Create function for sorting
-                // Use indexOf to find the element then add it to table
-            
-            }
     
             rowCount += 1;
             
@@ -265,8 +272,12 @@ function FoliumTable(settings, table) {
             });
     
             rowHTML += '</tr>';
-    
-            $(`#${tableId} tr:last`).after(rowHTML);
+
+            if (settings.sortAfterUpdate && selectedColumn !== -1) {
+                sortTable(selectedColumn);
+                initRows(table, settings);
+            }
+            else $(`#${tableId} tr:last`).after(rowHTML);
     
         }
     
@@ -321,10 +332,6 @@ function FoliumTable(settings, table) {
         rowCount() {
             return rowCount;
         }
-
-        rows() {
-            return settings.rows;
-        }
     
     }
 
@@ -339,7 +346,7 @@ $.fn.FoliumTable = function(settings) {
     if (settings === undefined) return foliumTable;
     settings.tableId = this[0].id;
 
-    foliumTable = new FoliumTable(settings, this);
+    foliumTable = new FoliumTable(settings, $(this));
 
     return foliumTable;
 }
