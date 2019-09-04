@@ -15,6 +15,11 @@ function FoliumTable(settings, table) {
     
 
     function setSelectedRow(rowIndex) {
+        if (rowIndex === -1) {
+            selectedRow = -1;
+            selectedRowObject = undefined;
+            return;
+        }
         selectedRow = rowIndex;
         if (selectedRowObject !== undefined) selectedRowObject.removeClass('selectedRow');
         const domRowIndex = new Number(rowIndex + 1).toString();
@@ -304,6 +309,7 @@ function FoliumTable(settings, table) {
         deleteRow(index) {
             settings.rows.splice(index, 1);
             rowCount -= 1;
+            setSelectedRow(index - 1);
             const domTableRemoveIndex = index + 1;
             $(`#${tableId} tr:eq(${domTableRemoveIndex})`).remove();
     
