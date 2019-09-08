@@ -167,12 +167,8 @@ function FoliumTable(settings, table) {
             this.cellRenderer = settings.cellRenderer !== undefined ? settings.cellRenderer : function(rowIndex, columnIndex, data, rowObject) { return data; };
             cellRenderer = this.cellRenderer;
 
-            if (settings.width !== undefined) {
-                const size = settings.width.size;
-                const unit = settings.width.unit;
-                
-                $('.folium').css('width', `${size}${unit}`);
-            }
+            if (settings.width !== undefined) $('.folium').css('width', `${settings.width}`);
+            
             const tableColumns = settings.columns;
             
             // Set sorting types to ASC
