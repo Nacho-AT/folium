@@ -17,12 +17,13 @@
         border-color: inherit;
         overflow-x:auto;
         box-shadow: 0 0 1px #000000;
-        user-select: none; 
+        table-layout: fixed;
       }
 
       .folium tbody {
         display: table-row-group;
         vertical-align: middle;        
+        overflow:scroll;
       }
 
       .folium .columnHeader {
@@ -78,10 +79,7 @@
       .foliumPageBar {
         font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
         height:22px;
-        width:992px;
         background-color: #313131;
-        padding-left: 3px;
-        padding-right:3px;
         margin-top:2px;
         border: 1px solid #000000;
       }
@@ -89,11 +87,13 @@
       .foliumPageBar .pageBarButton {
         background-color: #313131;
         border:none;
-        margin-right: 1px;
-        margin-left: 1px;
         height: 18px;
         border-radius: 3px;
         color:#FFFFFF;
+      }
+
+      .foliumPageBar .pageBarButton:focus {
+        outline: none !important;
       }
 
       .foliumPageBar .pageBarButton:hover {
@@ -104,22 +104,21 @@
       .foliumPageBar .infoBox {
         width: 140px;
         text-align: center;
-        margin-left: 2px;
-        margin-right: 2px;
         margin-top: 2px;
         background-color: #111111;
         color: #ffffff;
         border:1px solid #000000;
       }
 
-
+      .foliumPageBar .infoBox:focus {
+        outline: none !important;
+      }
 
     </style>
     <script src="jquery-3.3.1.slim.min.js"></script>
     <script src="folium.js"></script>
    </head>
   <body>
-    <div class="foliumPageBar"><button id="foliumPagefirst" class="pageBarButton">First</button><button class="pageBarButton" id="foliumPagePrevious"><</button><input type="text" class="infoBox" value="1-100 | Page: 1/10" readonly /><button class="pageBarButton" id="foliumPageNext">></button><button class="pageBarButton" id="foliumPageLast">Last</button></div>
     <table id="foliumTable"></table>
     <button id="addRow">Add New Row</button>
     <button id="updateRow">Update Row</button>
@@ -140,13 +139,29 @@
         rows: [
                 {username: 'jsmith', name : "John", surname : "Smith", emailAddress : 'foo@bar.com', age : 30, phoneNumber : '+1 111 111 111', nationality : 'American', location : 'San Francisco/CA'},
                 {username: 'jasmith', name : "Jane", surname : "Smith", emailAddress : '', age : 29, phoneNumber : '', nationality : '', location : ''},
+                {username: 'asatou', name : "Airi", surname : "Satau", emailAddress : 'asatau@bar.com', age : 33, phoneNumber : '+1 111 111 111', nationality : 'American', location : 'San Francisco/CA'},
+                {username: 'aramos', name : "Angelica", surname : "Ramos", emailAddress : 'foo@bar.com', age : 30, phoneNumber : '+1 111 111 111', nationality : 'American', location : 'San Francisco/CA'},
+                {username: 'acox', name : "Ashton", surname : "Cox", emailAddress : 'foo@bar.com', age : 30, phoneNumber : '+1 111 111 111', nationality : 'American', location : 'San Francisco/CA'},
+                {username: 'bgreer', name : "Bradley", surname : "Greer", emailAddress : 'foo@bar.com', age : 30, phoneNumber : '+1 111 111 111', nationality : 'American', location : 'San Francisco/CA'},
+                {username: 'bwagner', name : "Brendan", surname : "Wagner", emailAddress : 'foo@bar.com', age : 30, phoneNumber : '+1 111 111 111', nationality : 'American', location : 'San Francisco/CA'},
+                {username: 'bwilliamson', name : "Brielle", surname : "Williamson", emailAddress : 'foo@bar.com', age : 30, phoneNumber : '+1 111 111 111', nationality : 'American', location : 'San Francisco/CA'},
+                {username: 'bnash', name : "Bruno", surname : "Nash", emailAddress : 'foo@bar.com', age : 30, phoneNumber : '+1 111 111 111', nationality : 'American', location : 'San Francisco/CA'},
+                {username: 'cvence', name : "Caesar", surname : "Vence", emailAddress : 'foo@bar.com', age : 30, phoneNumber : '+1 111 111 111', nationality : 'American', location : 'San Francisco/CA'},
+                {username: 'cstevens', name : "Cara", surname : "Stevens", emailAddress : 'foo@bar.com', age : 30, phoneNumber : '+1 111 111 111', nationality : 'American', location : 'San Francisco/CA'},
+                {username: 'ckelly', name : "Cedric", surname : "Kelly", emailAddress : 'foo@bar.com', age : 30, phoneNumber : '+1 111 111 111', nationality : 'American', location : 'San Francisco/CA'},
+                {username: 'jalexander', name : "Jonas", surname : "Alexander", emailAddress : 'foo@bar.com', age : 30, phoneNumber : '+1 111 111 111', nationality : 'American', location : 'San Francisco/CA'},
+                {username: 'pbyrd', name : "Paul", surname : "Byrd", emailAddress : 'foo@bar.com', age : 30, phoneNumber : '+1 111 111 111', nationality : 'American', location : 'San Francisco/CA'},
+                {username: 'pbartlett', name : "Prescot", surname : "Bartlett", emailAddress : 'foo@bar.com', age : 30, phoneNumber : '+1 111 111 111', nationality : 'American', location : 'San Francisco/CA'},
+                {username: 'oliang', name : "Olivia", surname : "Liang", emailAddress : 'foo@bar.com', age : 30, phoneNumber : '+1 111 111 111', nationality : 'American', location : 'San Francisco/CA'},
+                {username: 'mbruce', name : "Michael", surname : "Bruce", emailAddress : 'foo@bar.com', age : 30, phoneNumber : '+1 111 111 111', nationality : 'American', location : 'San Francisco/CA'},
+                {username: 'msilva', name : "Michael", surname : "Silva", emailAddress : 'foo@bar.com', age : 30, phoneNumber : '+1 111 111 111', nationality : 'American', location : 'San Francisco/CA'}
               ],
-        pagination : true,
-        paginationStyle : "all",
+        pagination : {active : true, size : 5},
         searching : true,
         sortable : true,
         editable : true,
         width: '1000px',
+        //height: '250px',
         cellRenderer : function(rowIndex, columnIndex, data, rowObject) {
             if (columnIndex === 0) 
               return `<a href="/link.html?id=${rowObject.username}">${data}</a>`;

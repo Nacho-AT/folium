@@ -1,3 +1,10 @@
+/**
+ * TODO:
+ * Organize searching after inserting, updating as well as deleting data.
+ * Fix height problem of the table
+ * Searching mechanism
+ * 
+ */
 function FoliumTable(settings, table) {
 
     let rowCount = settings.rows.length;
@@ -9,7 +16,8 @@ function FoliumTable(settings, table) {
     let tableId = settings.tableId;
     let sortingColumnIndex = -1;
     let cellRenderer = undefined;
-
+    
+    const pagination = { size : -1, numOfPages : 0, currentPage : 1 };
     const sortingTypes = new Map();
     const columnSortingTypes = new Map();
     
@@ -71,10 +79,22 @@ function FoliumTable(settings, table) {
           
             settings.rows.sort((a, b) => sortingType * sortFunction(a[columnId], b[columnId]));                
             sortingTypes.set(columnId, sortingType * -1);
-
-            $(`#${settings.tableId} tbody`).remove();
         }
         
+    }
+
+    function updatePageBarInfo() {
+        const pageDataStartIndex = (pagination.currentPage - 1) * pagination.pageSize + 1;
+        const pageDataEndIndex = pageDataStartIndex + settings.rows.slice((pagination.currentPage - 1) * pagination.pageSize, pagination.currentPage * pagination.pageSize).length - 1;
+
+        $('#pageInfo').val(`${pageDataStartIndex}-${pageDataEndIndex} | Page: ${pagination.currentPage}/${pagination.numOfPages}`);
+    }
+
+    function updateTableByPagination() {
+             
+        $(`#${settings.tableId} tbody`).remove();
+        initRows(table, settings);
+        updatePageBarInfo();
     }
 
     function initColumns(tableColumns) {
@@ -87,7 +107,9 @@ function FoliumTable(settings, table) {
 
     function initRows(table, settings) {
         table.append('<tbody>');
-        settings.rows.forEach((row, index) => {
+        let rows = settings.pagination.active ? settings.rows.slice((pagination.currentPage - 1) * pagination.pageSize, pagination.currentPage * pagination.pageSize) : settings.rows;
+        
+        rows.forEach((row, index) => {
             const rowClass = index % 2 === 0 ? 'evenRow' : 'oddRow';
             let rowHTML = `<tr class="${rowClass}">`;
 
@@ -168,6 +190,8 @@ function FoliumTable(settings, table) {
             cellRenderer = this.cellRenderer;
 
             if (settings.width !== undefined) $('.folium').css('width', `${settings.width}`);
+            //TODO: Fix the below issue
+            if (settings.height !== undefined) $('.folium').css('height', `${settings.height}`);
             
             const tableColumns = settings.columns;
             
@@ -176,7 +200,54 @@ function FoliumTable(settings, table) {
     
             // Init columns
             initColumns(tableColumns);
-            
+                    
+            // If pagination is active then set up the pagination settings.
+            if (settings.pagination.active && typeof settings.pagination.size === 'number') {
+                //TODO: Create the page bar here. width:992px;
+        
+                $(`#${tableId}`).before('<div class="foliumPageBar"><button id="foliumPageFirst" class="pageBarButton">First</button><button class="pageBarButton" id="foliumPagePrevious"><</button><input type="text" id="pageInfo" class="infoBox" value="1-100 | Page: 1/10" readonly /><button class="pageBarButton" id="foliumPageNext">></button><button class="pageBarButton" id="foliumPageLast">Last</button></div>');
+                $('.foliumPageBar').css('width', $(`#${tableId}`).css('width'));
+
+                pagination.pageSize = settings.pagination.size;
+                
+                const numPagesMod = rowCount % pagination.pageSize;
+                pagination.numOfPages = parseInt(rowCount / pagination.pageSize);
+                pagination.numOfPages = numPagesMod !== 0 ? pagination.numOfPages + 1 : pagination.numOfPages;
+
+                updatePageBarInfo();
+                
+                // Switch to the next page                
+                $('#foliumPageNext').click(() => {
+                    if (pagination.currentPage + 1 > pagination.numOfPages) return;
+                    
+                    pagination.currentPage++;
+                    updateTableByPagination();
+                });
+
+                $('#foliumPagePrevious').click(() => {
+                    if (pagination.currentPage - 1 < 1) return;
+                    
+                    pagination.currentPage--;
+                    updateTableByPagination();
+                });
+
+                $('#foliumPageFirst').click(() => {
+                    if (pagination.currentPage === 1) return ; 
+                    pagination.currentPage = 1;
+                    updateTableByPagination();
+                });
+
+                $('#foliumPageLast').click(() => {
+                    if (pagination.currentPage === pagination.numOfPages) return ;
+                    pagination.currentPage = pagination.numOfPages;
+                    updateTableByPagination();
+                });
+
+            }
+
+            if (settings.pagination.size === undefined) console.error('Pagination size is not defined! Pagination skipped.');
+
+
             // Init Rows
             initRows(table, settings);
     
@@ -201,6 +272,7 @@ function FoliumTable(settings, table) {
     
                 if (settings.sortable) {
                     sortTable(selectedHeaderIndex);
+                    $(`#${settings.tableId} tbody`).remove();
                     initRows(table, settings);
                 }
                 
