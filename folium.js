@@ -4,7 +4,6 @@
  * Fix height problem of the table
  * Searching mechanism
  * Events
- * 
  */
 function FoliumTable(settings, table) {
 
@@ -85,6 +84,12 @@ function FoliumTable(settings, table) {
     }
 
     function updatePageBarInfo() {
+        
+        const numPagesMod = rowCount % pagination.pageSize;
+        
+        pagination.numOfPages = parseInt(rowCount / pagination.pageSize);
+        pagination.numOfPages = numPagesMod !== 0 ? pagination.numOfPages + 1 : pagination.numOfPages;
+
         const pageDataStartIndex = (pagination.currentPage - 1) * pagination.pageSize + 1;
         const pageDataEndIndex = pageDataStartIndex + settings.rows.slice((pagination.currentPage - 1) * pagination.pageSize, pagination.currentPage * pagination.pageSize).length - 1;
 
@@ -210,10 +215,6 @@ function FoliumTable(settings, table) {
                 $('.foliumPageBar').css('width', $(`#${tableId}`).css('width'));
 
                 pagination.pageSize = settings.pagination.size;
-                
-                const numPagesMod = rowCount % pagination.pageSize;
-                pagination.numOfPages = parseInt(rowCount / pagination.pageSize);
-                pagination.numOfPages = numPagesMod !== 0 ? pagination.numOfPages + 1 : pagination.numOfPages;
 
                 updatePageBarInfo();
                 
@@ -325,8 +326,12 @@ function FoliumTable(settings, table) {
     
         addRow(rowObject) {
             settings.rows.push(rowObject);
-    
             rowCount += 1;
+
+            if (settings.pagination.active) {
+                updateTableByPagination();
+                return;
+            }
             
             const rowClass = (rowCount - 1) % 2 === 0 ? 'evenRow' : 'oddRow';
             let rowHTML = `<tr class="${rowClass}">`;
@@ -369,6 +374,12 @@ function FoliumTable(settings, table) {
         deleteRow(index) {
             settings.rows.splice(index, 1);
             rowCount -= 1;
+
+            if (settings.pagination.active) {
+                updateTableByPagination();
+                return;
+            }
+
             setSelectedRow(index - 1);
             const domTableRemoveIndex = index + 1;
             $(`#${tableId} tr:eq(${domTableRemoveIndex})`).remove();
