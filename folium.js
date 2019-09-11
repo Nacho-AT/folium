@@ -3,6 +3,7 @@
  * Organize searching after inserting, updating as well as deleting data.
  * Fix height problem of the table
  * Searching mechanism
+ * Events
  * 
  */
 function FoliumTable(settings, table) {
@@ -17,7 +18,7 @@ function FoliumTable(settings, table) {
     let sortingColumnIndex = -1;
     let cellRenderer = undefined;
     
-    const pagination = { size : -1, numOfPages : 0, currentPage : 1 };
+    const pagination = { pageSize : -1, numOfPages : 0, currentPage : 1 };
     const sortingTypes = new Map();
     const columnSortingTypes = new Map();
     
@@ -383,6 +384,15 @@ function FoliumTable(settings, table) {
         }
     
         selectedRow() {
+            return selectedRow;
+        }
+
+        selectedRowInModel() {
+            if (settings.pagination.active) {
+
+                return (pagination.currentPage - 1) * pagination.pageSize  + selectedRow;
+            } 
+
             return selectedRow;
         }
 
