@@ -1,8 +1,6 @@
 /**
  * TODO:
- * Organize searching after inserting, updating as well as deleting data.
  * Fix height problem of the table
- * Searching mechanism
  * Events
  */
 function FoliumTable(settings, table) {
@@ -16,7 +14,10 @@ function FoliumTable(settings, table) {
     let tableId = settings.tableId;
     let sortingColumnIndex = -1;
     let cellRenderer = undefined;
-    
+    let tableLocale = 'en-US';
+    let searchText = '';
+    let searchColumnIndex = -1;
+
     const pagination = { pageSize : -1, numOfPages : 0, currentPage : 1 };
     const sortingTypes = new Map();
     const columnSortingTypes = new Map();
@@ -83,24 +84,24 @@ function FoliumTable(settings, table) {
         
     }
 
-    function updatePageBarInfo() {
+    function updatePageBarInfo(tableRows = settings.rows) {
         
-        const numPagesMod = rowCount % pagination.pageSize;
+        const numPagesMod = tableRows.length % pagination.pageSize;
         
-        pagination.numOfPages = parseInt(rowCount / pagination.pageSize);
+        pagination.numOfPages = parseInt(tableRows.length / pagination.pageSize);
         pagination.numOfPages = numPagesMod !== 0 ? pagination.numOfPages + 1 : pagination.numOfPages;
 
         const pageDataStartIndex = (pagination.currentPage - 1) * pagination.pageSize + 1;
-        const pageDataEndIndex = pageDataStartIndex + settings.rows.slice((pagination.currentPage - 1) * pagination.pageSize, pagination.currentPage * pagination.pageSize).length - 1;
+        const pageDataEndIndex = pageDataStartIndex + tableRows.slice((pagination.currentPage - 1) * pagination.pageSize, pagination.currentPage * pagination.pageSize).length - 1;
 
         $('#pageInfo').val(`${pageDataStartIndex}-${pageDataEndIndex} | Page: ${pagination.currentPage}/${pagination.numOfPages}`);
     }
 
-    function updateTableByPagination() {
+    function updateTableByPagination(tableRows = settings.rows) {
              
         $(`#${settings.tableId} tbody`).remove();
-        initRows(table, settings);
-        updatePageBarInfo();
+        initRows(tableRows);
+        updatePageBarInfo(tableRows);
     }
 
     function initColumns(tableColumns) {
@@ -111,9 +112,9 @@ function FoliumTable(settings, table) {
         table.append(columnsHTML + '</thead>');
     }
 
-    function initRows(table, settings) {
+    function initRows(tableRows = settings.rows) {
         table.append('<tbody>');
-        let rows = settings.pagination.active ? settings.rows.slice((pagination.currentPage - 1) * pagination.pageSize, pagination.currentPage * pagination.pageSize) : settings.rows;
+        let rows = settings.pagination.active ? tableRows.slice((pagination.currentPage - 1) * pagination.pageSize, pagination.currentPage * pagination.pageSize) : tableRows;
         
         rows.forEach((row, index) => {
             const rowClass = index % 2 === 0 ? 'evenRow' : 'oddRow';
@@ -251,7 +252,7 @@ function FoliumTable(settings, table) {
 
 
             // Init Rows
-            initRows(table, settings);
+            initRows();
     
     
             $('td,th').on('focus', () => {
@@ -275,7 +276,7 @@ function FoliumTable(settings, table) {
                 if (settings.sortable) {
                     sortTable(selectedHeaderIndex);
                     $(`#${settings.tableId} tbody`).remove();
-                    initRows(table, settings);
+                    initRows();
                 }
                 
              });
@@ -328,6 +329,12 @@ function FoliumTable(settings, table) {
             settings.rows.push(rowObject);
             rowCount += 1;
 
+            // If searching is active then render the table with search result by calling search function again.
+            if (searchText !== '' && searchText !== undefined) {
+                this.search(searchText, searchColumnIndex);
+                return;
+            }
+
             if (settings.pagination.active) {
                 updateTableByPagination();
                 return;
@@ -350,6 +357,10 @@ function FoliumTable(settings, table) {
             $(`#${tableId} tr:last`).after(rowHTML);
     
         }
+
+        addRows(rows) {
+            rows.forEach(row => this.addRow(row));
+        }
     
         updateRow(index, rowObject) {
     
@@ -370,10 +381,22 @@ function FoliumTable(settings, table) {
             const updateIndex = index + 1;
             $(`#${tableId} tr:eq(${updateIndex})`).html(rowHTML);
         }
+
+        updateRows(indexes, rows) {
+            for (let i = 0 ; i < indexes.length ; i++) {
+                this.updateRow(indexes[i], rows[i]);
+            }
+        }
     
         deleteRow(index) {
             settings.rows.splice(index, 1);
             rowCount -= 1;
+
+            // If searching is active then render the table with search result by callcing search function again.
+            if (searchText !== '' && searchText !== undefined) {
+                this.search(searchText, searchColumnIndex);
+                return;
+            }
 
             if (settings.pagination.active) {
                 updateTableByPagination();
@@ -393,17 +416,22 @@ function FoliumTable(settings, table) {
             }
     
         }
+
+        deleteRows(indexes) {
+            indexes.forEach(index => this.deleteRow(index));
+        }
     
         selectedRow() {
             return selectedRow;
         }
 
+        selectedRowObject() {
+            return settings.rows[selectedRow];
+        }
+
         selectedRowInModel() {
-            if (settings.pagination.active) {
-
-                return (pagination.currentPage - 1) * pagination.pageSize  + selectedRow;
-            } 
-
+            if (settings.pagination.active) return (pagination.currentPage - 1) * pagination.pageSize  + selectedRow;
+        
             return selectedRow;
         }
 
@@ -417,6 +445,24 @@ function FoliumTable(settings, table) {
 
         rowCount() {
             return rowCount;
+        }
+
+        rows() {
+            return settings.rows;
+        }
+
+        search(value, columnIndex = -1) {
+            searchText = value;
+            let searchResult = null;
+
+            if (columnIndex !== -1) searchResult = settings.rows.filter(row => row[settings.columns[columnIndex].columnId].toLowerCase(tableLocale).includes(value)); 
+            else searchResult = settings.rows.filter(row => Object.values(row).join(';').toLowerCase(tableLocale).includes(value));
+
+            $(`#${settings.tableId} tbody`).remove();
+            if (settings.pagination.active) updateTableByPagination(searchResult);
+            else initRows(searchResult);
+
+            return searchResult.length;
         }
     
     }
