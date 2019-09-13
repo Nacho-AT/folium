@@ -1,7 +1,6 @@
 /**
  * TODO:
  * Fix height problem of the table
- * Events
  */
 function FoliumTable(settings, table) {
 
@@ -150,12 +149,15 @@ function FoliumTable(settings, table) {
         events.get('rowClicked')(rowIndex);
      });
 
-     $(`#${settings.tableId}`).on('dblclick', 'td', function() {
+     $(`#${settings.tableId} td`).dblclick(function() {
         const selectedRowObject = $(this).parent();
         const rowIndex = selectedRowObject.index();
 
         activateCellEditor($(this));
         events.get('rowDoubleClicked')(rowIndex);
+     });
+     $(`#${settings.tableId}`).on('dblclick', 'td', function() {
+        
      });
 
     }
