@@ -164,10 +164,11 @@ function FoliumTable(settings, table) {
         const inputBoxWidth = tdObject.css('width');
         const rowIndex = tdObject.parent().index();
         const columnIndex = tdObject.index();
-            
+      
         tdObject.html(`<input type="text" id="cellEditor" style="width:${inputBoxWidth}" value="${value}" />`);
         const cellEditor = $('#cellEditor');
         cellEditor.focus();
+        cellEditor[0].setSelectionRange(value.length, value.length);
         $('#cellEditor').focusout(function() {
             const newValue = cellEditor.val();
             const columnId = settings.columns[columnIndex].columnId;
