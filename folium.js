@@ -1,6 +1,7 @@
 /**
  * TODO:
  * Fix height problem of the table
+ * Start editing after typing 
  */
 function FoliumTable(settings, table) {
 
@@ -294,33 +295,40 @@ function FoliumTable(settings, table) {
                 const RIGHT_ARROW_KEY_CODE = 39;
                 const DOWN_ARROW_KEY_CODE = 40;
                 const F2_KEY_CODE = 113;
-
+              
                 if (keyCode === LEFT_ARROW_KEY_CODE) {
                     if (selectedColumn <= 0) return;
                     
                     setSelectedColumn(selectedColumn - 1);
+                    return;
                 }
                 else if (keyCode === UP_ARROW_KEY_CODE) {
                     if (selectedRow <= 0) return;
                     
                     setSelectedRow(selectedRow - 1);
                     setSelectedColumn(selectedColumn);
+                    return;
                 }
                 else if (keyCode === RIGHT_ARROW_KEY_CODE) {
                     if (selectedColumn === columnCount - 1) return;
     
                     setSelectedColumn(selectedColumn + 1);
+                    return;
                 }
                 else if (keyCode === DOWN_ARROW_KEY_CODE) {
                     if (selectedRow === rowCount - 1) return;
                     
                     setSelectedRow(selectedRow + 1);
                     setSelectedColumn(selectedColumn);
+                    return;
                 }
 
                 if (keyCode === F2_KEY_CODE) {
                     activateCellEditor(selectedColumnObject);
+                    return;
                 }
+
+                activateCellEditor(selectedColumnObject);
                 
             });
     
