@@ -197,8 +197,6 @@ function FoliumTable(settings, table) {
             cellRenderer = this.cellRenderer;
 
             if (settings.width !== undefined) $('.folium').css('width', `${settings.width}`);
-            //TODO: Fix the below issue
-            if (settings.height !== undefined) $('.folium').css('height', `${settings.height}`);
             
             const tableColumns = settings.columns;
             
@@ -210,8 +208,7 @@ function FoliumTable(settings, table) {
                     
             // If pagination is active then set up the pagination settings.
             if (settings.pagination.active && typeof settings.pagination.size === 'number') {
-                //TODO: Create the page bar here. width:992px;
-        
+                
                 $(`#${tableId}`).before('<div class="foliumPageBar"><button id="foliumPageFirst" class="pageBarButton">First</button><button class="pageBarButton" id="foliumPagePrevious"><</button><input type="text" id="pageInfo" class="infoBox" value="1-100 | Page: 1/10" readonly /><button class="pageBarButton" id="foliumPageNext">></button><button class="pageBarButton" id="foliumPageLast">Last</button></div>');
                 $('.foliumPageBar').css('width', $(`#${tableId}`).css('width'));
 
@@ -378,8 +375,20 @@ function FoliumTable(settings, table) {
                 const tdOutput = columnValue === undefined ? '<td></td>' : `<td>${value}</td>`;
                 rowHTML += tdOutput;
             });
-            const updateIndex = index + 1;
-            $(`#${tableId} tr:eq(${updateIndex})`).html(rowHTML);
+
+            let updateIndex = index + 1;
+            if (settings.pagination.active) {
+                const startRange = (pagination.currentPage - 1) * pagination.pageSize;
+                const endRange = pagination.currentPage * pagination.pageSize - 1;
+
+                // if the updated row index is present in the current page, then update 
+                if (index >= startRange && index <= endRange){
+                    updateIndex = index - startRange + 1; // +1 for omitting header
+                    $(`#${tableId} tr:eq(${updateIndex})`).html(rowHTML);
+                } 
+                
+            }
+            else $(`#${tableId} tr:eq(${updateIndex})`).html(rowHTML);
         }
 
         updateRows(indexes, rows) {
@@ -455,8 +464,8 @@ function FoliumTable(settings, table) {
             searchText = value;
             let searchResult = null;
 
-            if (columnIndex !== -1) searchResult = settings.rows.filter(row => row[settings.columns[columnIndex].columnId].toLowerCase(tableLocale).includes(value)); 
-            else searchResult = settings.rows.filter(row => Object.values(row).join(';').toLowerCase(tableLocale).includes(value));
+            if (columnIndex !== -1) searchResult = settings.rows.filter(row => row[settings.columns[columnIndex].columnId].toLowerCase(tableLocale).includes(value.toLowerCase(tableLocale))); 
+            else searchResult = settings.rows.filter(row => Object.values(row).join(';').toLowerCase(tableLocale).includes(value.toLowerCase(tableLocale)));
 
             $(`#${settings.tableId} tbody`).remove();
             if (settings.pagination.active) updateTableByPagination(searchResult);
