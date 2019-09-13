@@ -21,7 +21,10 @@ function FoliumTable(settings, table) {
     const pagination = { pageSize : -1, numOfPages : 0, currentPage : 1 };
     const sortingTypes = new Map();
     const columnSortingTypes = new Map();
-    
+    const events = new Map();
+
+    events.set('rowClicked', function(rowIndex) {});
+    events.set('rowDoubleClicked', function(rowIndex) {});    
 
     function setSelectedRow(rowIndex) {
         if (rowIndex === -1) {
@@ -135,7 +138,6 @@ function FoliumTable(settings, table) {
 
         table.append('</tbody>');
 
-        // Init selectedRowFeature
     $(`#${settings.tableId}`).on('click', 'td', function(){
         const selectedRowObject = $(this).parent();
         const selectedColumnObject = $(this);
@@ -145,10 +147,15 @@ function FoliumTable(settings, table) {
 
         setSelectedRow(rowIndex);
         setSelectedColumn(columnIndex);
+        events.get('rowClicked')(rowIndex);
      });
 
      $(`#${settings.tableId}`).on('dblclick', 'td', function() {
+        const selectedRowObject = $(this).parent();
+        const rowIndex = selectedRowObject.index();
+
         activateCellEditor($(this));
+        events.get('rowDoubleClicked')(rowIndex);
      });
 
     }
@@ -165,7 +172,6 @@ function FoliumTable(settings, table) {
         cellEditor.focus();
         $('#cellEditor').focusout(function() {
             const newValue = cellEditor.val();
-            //TODO: Sort the array after editing...
             const columnId = settings.columns[columnIndex].columnId;
             settings.rows[rowIndex][columnId] = newValue;
             tdObject.html(newValue);
@@ -458,6 +464,10 @@ function FoliumTable(settings, table) {
 
         rows() {
             return settings.rows;
+        }
+
+        on(event, fn) {
+            events.set(event, fn);
         }
 
         search(value, columnIndex = -1) {
