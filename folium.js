@@ -156,10 +156,6 @@ function FoliumTable(settings, table) {
         activateCellEditor($(this));
         events.get('rowDoubleClicked')(rowIndex);
      });
-     $(`#${settings.tableId}`).on('dblclick', 'td', function() {
-        
-     });
-
     }
 
     function activateCellEditor(tdObject) {
