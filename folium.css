@@ -1,0 +1,119 @@
+.folium {
+    border-collapse: collapse;
+    font-family: Tahoma, Geneva, sans-serif;
+    font-size: 12px;
+    border: 1px solid #cccccc;
+    border-color: inherit;
+    overflow:auto;
+    box-shadow: 0 0 1px #000000;
+    table-layout: fixed;
+    display: block;
+    margin:0px;
+  }
+
+  .folium tbody {
+    vertical-align: middle;        
+    overflow:scroll;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
+  .folium th {
+    position: -webkit-sticky;
+    position: sticky;
+    top: -1px;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  
+  .folium .columnHeader {
+    height: 20px;
+    min-width: 100px;
+    vertical-align: middle;
+    background-color: #38393a;
+    color:#FFFFFF;
+    padding: 2px 2px 2px 5px;
+    border: 1px solid #dddddd;
+    text-align: left;
+  }
+
+  .folium .selectedColumnHeader {
+    height: 20px;
+    min-width: 100px;
+    vertical-align: middle;
+    background-color: #030303 !important;
+    color:#FFFFFF;
+    padding: 2px 2px 2px 5px;
+    border: 1px solid #dddddd;
+    text-align: left;
+  }
+
+  .folium td {
+    padding: 2px 2px 2px 5px;
+    margin: -2px -2px -2px -5px;    
+    border: 1px solid #dddddd;
+  }
+
+  .folium .evenRow {background-color: #fafcf9;}
+  .folium  .oddRow {background-color: #f2f2f2;}
+
+  .folium .selectedRow {
+    background-color: #6a84a5;
+    color:#EEEEEE;
+  }
+
+  .folium .selectedColumn {
+    background-color: #4971a3;
+    color: #EEEEEE;
+  }
+
+  .folium .sortHeader {
+    background: url("img/arrow.png") no-repeat 99%;
+    background-color: #38393a;
+  }
+
+  .folium:focus {
+    outline: none !important;
+  }
+
+  .foliumPageBar {
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    height:22px;
+    background-color: #313131;
+    margin-top:2px;
+    border: 1px solid #000000;
+  }
+  
+  .foliumPageBar .pageBarButton {
+    background-color: #313131;
+    border:none;
+    height: 18px;
+    border-radius: 3px;
+    color:#FFFFFF;
+  }
+
+  .foliumPageBar .pageBarButton:focus {
+    outline: none !important;
+  }
+
+  .foliumPageBar .pageBarButton:hover {
+    background-image: linear-gradient(#CCCCCC, #FFFFFF);
+    color:#000000;
+  }
+
+  .foliumPageBar .infoBox {
+    width: 140px;
+    text-align: center;
+    margin-top: 2px;
+    background-color: #111111;
+    color: #ffffff;
+    border:1px solid #000000;
+  }
+
+  .foliumPageBar .infoBox:focus {
+    outline: none !important;
+  }
