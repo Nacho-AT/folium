@@ -188,11 +188,12 @@ class FoliumTable {
         function activateCellEditor(tdObject) {
 
             const ENTER_KEY_CODE = 13;
-            const value = tdObject.text();
             const inputBoxWidth = tdObject.css('width');
             const rowIndex = tdObject.parent().index();
             const columnIndex = tdObject.index();
-          
+            const columnId = settings.columns[columnIndex].columnId;
+            const value = settings.rows[rowIndex][columnId];
+
             if (!settings.editable) return;
 
             tdObject.html(`<input type="text" id="cellEditor" style="width:${inputBoxWidth}" value="${value}" />`);
@@ -201,13 +202,14 @@ class FoliumTable {
             cellEditor[0].setSelectionRange(value.length, value.length);
             $('#cellEditor').focusout(function() {
                 let newValue = cellEditor.val();
-                const columnId = settings.columns[columnIndex].columnId;
-
+                
                 // Parse the new value according to column data type.
                 newValue = dataTypeParses.get(settings.columns[columnIndex].dataType)(newValue);
-
                 settings.rows[rowIndex][columnId] = newValue;
-                tdObject.html(newValue);
+
+                const valueRendered = settings.cellRenderer(rowIndex, columnIndex, newValue, settings.rows[rowIndex]);
+
+                tdObject.html(valueRendered);
     
             });
             // If user presses enter then focus out
