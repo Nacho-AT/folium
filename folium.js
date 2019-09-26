@@ -27,6 +27,7 @@ class FoliumTable {
         let searchText = '';
         let searchColumnIndex = -1;
         let sortingColumnIndex = -1;
+        let rowsAsArrays = undefined;
        
         const pagination = { pageSize : -1, numOfPages : 0, currentPage : 1 };
         const sortingOrders = new Map();
@@ -106,8 +107,10 @@ class FoliumTable {
     
                 const sortingType = sortingOrders.get(columnId);
                 const sortFunction = columnSortingFunctions.get(columnSortingType);
-              
-                settings.rows.sort((a, b) => sortingType * sortFunction(a[columnId], b[columnId]));                
+                
+                const elementAccessor = rowsAsArrays ? columnIndex : columnId ;
+
+                settings.rows.sort((a, b) => sortingType * sortFunction(a[elementAccessor], b[elementAccessor]));                
                 sortingOrders.set(columnId, sortingType * -1);
             }
             
@@ -150,8 +153,11 @@ class FoliumTable {
                 let rowHTML = `<tr class="${rowClass}">`;
     
                 settings.columns.forEach((column, columnIndex) => {
-                    const columnValue = row[column.columnId];
-    
+                    let columnValue = undefined;
+
+                    if (rowsAsArrays) columnValue = row[columnIndex];
+                    else columnValue = row[column.columnId];
+                    
                     // Render the value presented from the settings.
                     const value = cellRenderer(index, columnIndex, columnValue, row);
                     const tdOutput = columnValue === undefined ? '<td></td>' : `<td>${value}</td>`;
@@ -192,7 +198,7 @@ class FoliumTable {
             const rowIndex = tdObject.parent().index();
             const columnIndex = tdObject.index();
             const columnId = settings.columns[columnIndex].columnId;
-            const value = settings.rows[rowIndex][columnId];
+            const value = rowsAsArrays ? settings.rows[rowIndex][columnIndex] : settings.rows[rowIndex][columnId];
 
             if (!settings.editable) return;
 
@@ -205,9 +211,11 @@ class FoliumTable {
                 
                 // Parse the new value according to column data type.
                 newValue = dataTypeParses.get(settings.columns[columnIndex].dataType)(newValue);
-                settings.rows[rowIndex][columnId] = newValue;
+                
+                if (rowsAsArrays) settings.rows[rowIndex][columnIndex] = newValue;
+                else settings.rows[rowIndex][columnId] = newValue;
 
-                const valueRendered = settings.cellRenderer(rowIndex, columnIndex, newValue, settings.rows[rowIndex]);
+                const valueRendered = cellRenderer(rowIndex, columnIndex, newValue, settings.rows[rowIndex]);
 
                 tdObject.html(valueRendered);
     
@@ -237,6 +245,8 @@ class FoliumTable {
     
         table.addClass('folium');
         table.attr('tabindex', '0');
+        
+        rowsAsArrays = settings.rowsAsArrays !== undefined && settings.rowsAsArrays !== null && typeof settings.rowsAsArrays === 'boolean'  ? settings.rowsAsArrays : false;
 
         this.cellRenderer = settings.cellRenderer !== undefined ? settings.cellRenderer : function(rowIndex, columnIndex, data, rowObject) { return data; };
         cellRenderer = this.cellRenderer;
@@ -374,7 +384,7 @@ class FoliumTable {
             let rowHTML = `<tr class="${rowClass}">`;
             
             settings.columns.forEach((column, columnIndex) => {
-                const columnValue = rowObject[column.columnId];
+                const columnValue = rowsAsArrays ? rowObject[columnIndex] : rowObject[column.columnId];
     
                 // Render the value presented from the settings.
                 const value = this.cellRenderer(rowCount - 1, columnIndex, columnValue, rowObject);
@@ -393,13 +403,17 @@ class FoliumTable {
         _object.updateRow = function(index, rowObject) {
     
             const rowToUpdate = settings.rows[index];
-    
-            Object.keys(rowObject).forEach(property => rowToUpdate[property] = rowObject[property]);
-    
+            
+            if (rowsAsArrays) Object.keys(rowObject).forEach(property => {
+                const columnIndexToUpdate = settings.columns.map(column => column.columnId).indexOf(property);
+                console.log(columnIndexToUpdate);
+                rowToUpdate[columnIndexToUpdate] = rowObject[property];
+            });
+            else Object.keys(rowObject).forEach(property => rowToUpdate[property] = rowObject[property]);
             let rowHTML = '';
             
             settings.columns.forEach((column, columnIndex) => {
-                const columnValue = rowToUpdate[column.columnId];
+                const columnValue = rowsAsArrays ? rowToUpdate[columnIndex] : rowToUpdate[column.columnId];
     
                 // Render the value presented from the settings.
                 const value = this.cellRenderer(rowCount - 1, columnIndex, columnValue, rowToUpdate);
@@ -507,8 +521,14 @@ class FoliumTable {
             searchText = value;
             let searchResult = null;
             
-            if (columnIndex !== -1) searchResult = settings.rows.filter(row => row[settings.columns[columnIndex].columnId].toLowerCase(tableLocale).includes(value.toLowerCase(tableLocale))); 
-            else searchResult = settings.rows.filter(row => Object.values(row).join(';').toLowerCase(tableLocale).includes(value.toLowerCase(tableLocale)));
+            if (rowsAsArrays) {
+                if (columnIndex !== -1) searchResult = settings.rows.filter(row => row[columnIndex].toLowerCase(tableLocale).includes(value.toLowerCase(tableLocale))); 
+                else searchResult = settings.rows.filter(row => Object.values(row).join(';').toLowerCase(tableLocale).includes(value.toLowerCase(tableLocale)));
+            }
+            else {
+                if (columnIndex !== -1) searchResult = settings.rows.filter(row => row[settings.columns[columnIndex].columnId].toLowerCase(tableLocale).includes(value.toLowerCase(tableLocale))); 
+                else searchResult = settings.rows.filter(row => Object.values(row).join(';').toLowerCase(tableLocale).includes(value.toLowerCase(tableLocale)));
+            }
             
             $(`#${settings.tableId} tbody`).remove();
             
