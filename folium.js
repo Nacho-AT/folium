@@ -147,7 +147,8 @@ class FoliumTable {
         function initRows(tableRows = settings.rows) {
             table.append('<tbody>');
             let rows = settings.pagination.active ? tableRows.slice((pagination.currentPage - 1) * pagination.pageSize, pagination.currentPage * pagination.pageSize) : tableRows;
-            
+            let rowsHTML = '';
+
             rows.forEach((row, index) => {
                 const rowClass = index % 2 === 0 ? 'evenRow' : 'oddRow';
                 let rowHTML = `<tr class="${rowClass}">`;
@@ -165,9 +166,10 @@ class FoliumTable {
                 });
     
                 rowHTML += '</tr>';
-                table.append(rowHTML);
+                rowsHTML += rowHTML;
             });
-    
+
+            table.append(rowsHTML);
             table.append('</tbody>');
     
         $(`#${tableId}`).on('click', 'td', function(){
@@ -387,7 +389,7 @@ class FoliumTable {
                 const columnValue = rowsAsArrays ? rowObject[columnIndex] : rowObject[column.columnId];
     
                 // Render the value presented from the settings.
-                const value = this.cellRenderer(rowCount - 1, columnIndex, columnValue, rowObject);
+                const value = cellRenderer(rowCount - 1, columnIndex, columnValue, rowObject);
                 const tdOutput = columnValue === undefined ? '<td></td>' : `<td>${value}</td>`;
                 rowHTML += tdOutput;
             });
@@ -397,7 +399,38 @@ class FoliumTable {
     
         }
         _object.addRows = function(rows) {
-            rows.forEach(row => this.addRow(row));
+            settings.rows = settings.rows.concat(rows);
+            //rowCount += rows.length;
+
+            if (searchText !== '') {
+                this.search(searchText, searchColumnIndex);
+                return;
+            }
+            if (settings.pagination.active) {
+                updateTableByPagination();
+                return;
+            }
+            let rowsHTML = '';
+
+            rows.forEach(rowObject => {
+                const rowClass = (rowCount - 1) % 2 === 0 ? 'evenRow' : 'oddRow';
+                let rowHTML = `<tr class="${rowClass}">`;
+                
+                settings.columns.forEach((column, columnIndex) => {
+                    const columnValue = rowsAsArrays ? rowObject[columnIndex] : rowObject[column.columnId];
+        
+                    // Render the value presented from the settings.
+                    const value = cellRenderer(rowCount - 1, columnIndex, columnValue, rowObject);
+                    const tdOutput = columnValue === undefined ? '<td></td>' : `<td>${value}</td>`;
+                    rowHTML += tdOutput;
+                });
+        
+                rowHTML += '</tr>';
+                rowsHTML += rowHTML;
+                rowCount++;
+            });
+
+            $(`#${tableId} tr:last`).after(rowsHTML);
         }
     
         _object.updateRow = function(index, rowObject) {
@@ -406,7 +439,6 @@ class FoliumTable {
             
             if (rowsAsArrays) Object.keys(rowObject).forEach(property => {
                 const columnIndexToUpdate = settings.columns.map(column => column.columnId).indexOf(property);
-                console.log(columnIndexToUpdate);
                 rowToUpdate[columnIndexToUpdate] = rowObject[property];
             });
             else Object.keys(rowObject).forEach(property => rowToUpdate[property] = rowObject[property]);
