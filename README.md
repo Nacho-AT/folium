@@ -127,7 +127,7 @@ To set the specific width, height size, **width** and **height** properties must
 const tableSettings = {
   ...
   width : '500px', // Set table width to 500px
-  width : '150px' // Set table height to 150px
+  height : '150px' // Set table height to 150px
 };
 ```
 
