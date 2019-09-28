@@ -63,6 +63,28 @@ Minimal requirement of initializing Folium Table is to provide an object that po
 
 ***rows*** property is an array of row objects which defines rows for the table. A row object must have properties that match the column ids defined in **columns** array.  
 
+### Define rows as arrays
+
+There is a feasible way to define rows as arrays. To do that, ***rowsAsArray*** property must be set to **true**.
+
+```javascript
+const tableSettings = {
+  ...
+  rows : [['jsmith', "John", "Smith", 'foo@bar.com', 30, '+1 111 111 111', 'American', 'San Francisco/CA'],
+                ['jasmith', "Jane", "Smith", '', 29, '', '', ''],
+                ['asatou', "Airi", "Satau", 'asatau@bar.com', 33, '+1 111 111 111', 'American', 'San Francisco/CA']],
+  rowsAsArray : true
+};
+
+const myFoliumTable = $('#foliumTableId').FoliumTable();
+
+// Add rows by providing array(s) of primitive data.
+myFoliumTable.addRow(['mweiss', "Michael", "Weiss", 'michaelweiss@foobar.com', 25, '+1 111 111 111', 'American', 'San Francisco/CA']);
+myFoliumTable.addRows([[/*row data 1*/], [/*row data 2*/]]);
+
+```
+*Note:* There is no change in terms of updating rows. When there is a need to update rows, column ids have to be provided.
+
 ### Accessing FoliumTable Object
 
 When a Folium Table is initialized, It provides its functionalities in an object. This object can be assigned by calling FoliumTable plugin function without parameters.
@@ -133,6 +155,8 @@ const tableSettings = {
 
 ### Cell Rendering
 
+![cellRendering](https://raw.githubusercontent.com/cemozden/folium/master/readme_pics/cellrenderer.png)
+
 Sometimes, We might be supposed to render table cells in a different format. For Example, we might want to add links, input objects and other html objects into our table cells. To achieve that, We can provide a cell renderer function and assign the function to **cellRenderer** property of the table settings object. cellRenderer function is called for each cell during the table rendering. The function has to have 4 parameters provided
 (rowIndex, columnIndex, data, rowObject)
 * *rowIndex*: The row index which is being rendered at the moment.
@@ -156,6 +180,8 @@ const tableSettings = {
 ```
 
 ### Pagination
+
+![pagination](https://raw.githubusercontent.com/cemozden/folium/master/readme_pics/pagination.png)
 
 Table pagination can be activated by assigning an object for the **pagination** property of the table settings. Folium generates pagination bar on top of the table to navigate through pages. It generates First, Previous, Next and Last page buttons. Pagination bar is supported with pagination information box regarding which page is currently presented, how many pages exist etc. 
 
