@@ -358,7 +358,10 @@ class FoliumTable {
                 return;
             }
             else if (keyCode === DOWN_ARROW_KEY_CODE) {
-                if (selectedRow === rowCount - 1) return;
+                const currentPageRowCount = $(`#${tableId} tbody tr`).length;
+                const lastRowIndex = settings.pagination.active ? currentPageRowCount - 1 : rowCount - 1;
+                
+                if (selectedRow === lastRowIndex) return;
                 
                 setSelectedRow(selectedRow + 1);
                 setSelectedColumn(selectedColumn);
