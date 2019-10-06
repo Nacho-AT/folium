@@ -450,7 +450,7 @@ class FoliumTable {
                 rowsHTML += rowHTML;
                 rowCount++;
             });
-            
+
             const lastRowIndex = $(`#${tableId} tbody tr:last`).index();
 
             if (lastRowIndex === -1) $(`#${tableId} tbody`).html(rowsHTML);
@@ -596,6 +596,24 @@ class FoliumTable {
             else initRows(searchResult);
             
             return searchResult.length;
+        };
+
+        _object.clear = function() {
+            $(`#${tableId} tbody`).empty();
+
+            settings.rows = [];
+            rowCount = 0;
+            selectedRow = -1;
+            selectedColumn = -1;
+            selectedRowObject = undefined;
+            selectedColumnObject = undefined;
+            searchColumnIndex = -1;
+            sortingColumnIndex = -1;
+            pagination.currentPage = 1;
+            pagination.numOfPages = 0;
+
+            if (settings.pagination.active) updatePageBarInfo(settings.rows);
+        
         };
 
 // end
