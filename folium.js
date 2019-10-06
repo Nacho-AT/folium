@@ -98,20 +98,24 @@ class FoliumTable {
             return 0;
         }
     
-        function sortTable(columnIndex) {
+        function sortTable(columnIndex, reverseSorting = true) {
             if (columnIndex === -1) return;
     
             if (settings.sortable) {
                 const columnId = settings.columns[columnIndex].columnId;
                 const columnSortingType = settings.columns[columnIndex].dataType;
     
-                const sortingType = sortingOrders.get(columnId);
+                let sortingType = sortingOrders.get(columnId);
+                //Sort the table in a reverse order after clicking the same header.
+                if (reverseSorting) {
+                    sortingType *= -1;
+                    sortingOrders.set(columnId, sortingType);
+                }
                 const sortFunction = columnSortingFunctions.get(columnSortingType);
                 
                 const elementAccessor = rowsAsArrays ? columnIndex : columnId ;
 
                 settings.rows.sort((a, b) => sortingType * sortFunction(a[elementAccessor], b[elementAccessor]));                
-                sortingOrders.set(columnId, sortingType * -1);
             }
             
         }
@@ -259,7 +263,7 @@ class FoliumTable {
         const tableColumns = settings.columns;
         
         // Set sorting orders to ASC
-        tableColumns.forEach(column => sortingOrders.set(column.columnId, 1));
+        tableColumns.forEach(column => sortingOrders.set(column.columnId, -1));
 
         // Init columns
         initColumns(tableColumns);
@@ -380,6 +384,11 @@ class FoliumTable {
                 this.search(searchText, searchColumnIndex);
                 return;
             }
+            
+            if (sortingColumnIndex !== -1) {
+                sortTable(sortingColumnIndex, false);
+            }
+
             if (settings.pagination.active) {
                 updateTableByPagination();
                 return;
@@ -400,7 +409,7 @@ class FoliumTable {
             rowHTML += '</tr>';
             $(`#${tableId} tr:last`).after(rowHTML);
     
-        }
+        };
         _object.addRows = function(rows) {
             settings.rows = settings.rows.concat(rows);
             //rowCount += rows.length;
@@ -409,6 +418,11 @@ class FoliumTable {
                 this.search(searchText, searchColumnIndex);
                 return;
             }
+
+            if (sortingColumnIndex !== -1) {
+                sortTable(sortingColumnIndex, false);
+            }
+
             if (settings.pagination.active) {
                 updateTableByPagination();
                 return;
@@ -434,7 +448,7 @@ class FoliumTable {
             });
 
             $(`#${tableId} tr:last`).after(rowsHTML);
-        }
+        };
     
         _object.updateRow = function(index, rowObject) {
     
@@ -467,12 +481,12 @@ class FoliumTable {
                 
             }
             else $(`#${tableId} tr:eq(${updateIndex})`).html(rowHTML);
-        }
+        };
         _object.updateRows = function(indexes, rows) {
             for (let i = 0 ; i < indexes.length ; i++) {
                 this.updateRow(indexes[i], rows[i]);
             }
-        }
+        };
     
         _object.deleteRow = function(index) {
             settings.rows.splice(index, 1);
@@ -498,53 +512,53 @@ class FoliumTable {
                 $(`#${tableId} tr:eq(${updateIndex})`).removeClass().addClass(rowClass);
             }
     
-        }
+        };
         _object.deleteRows = function(indexes) {
             indexes.forEach(index => this.deleteRow(index));
-        }
+        };
     
         _object.selectedRow = function() {
             return selectedRow;
-        }
+        };
         _object.selectedRowInModel = function() {
             if (settings.pagination.active) return (pagination.currentPage - 1) * pagination.pageSize  + selectedRow;
         
             return selectedRow;
-        }
+        };
         _object.selectedColumn = function() {
             return selectedColumn;
-        }
+        };
         _object.columnCount = function() {
             return columnCount;
-        }
+        };
         _object.rowCount = function() {
             return rowCount;
-        }
+        };
         _object.getRow = function(index) {
             return settings.rows[index];
-        }
+        };
         _object.getRows = function() {
             return settings.rows;
-        }
+        };
         _object.on = function(event, fn) {
             events.set(event, fn);
-        }
+        };
 
         _object.currentPage = function() {
             return currentPage;
-        }
+        };
 
         _object.pageCount = function() {
             return pageCount;
-        }
+        };
 
         _object.getId = function() {
             return tableId;
-        }
+        };
 
         _object.setLocale = function(locale) {
             tableLocale = locale;
-        }
+        };
 
         _object.search = function(value, columnIndex = -1) {
             
@@ -574,7 +588,7 @@ class FoliumTable {
             else initRows(searchResult);
             
             return searchResult.length;
-        }
+        };
 
 // end
     }
