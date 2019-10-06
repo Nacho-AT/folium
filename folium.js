@@ -23,6 +23,7 @@ class FoliumTable {
         let selectedColumnObject = undefined;
         let tableId = settings.tableId;
         let cellRenderer = undefined;
+        let headerRenderer = undefined;
         let tableLocale = 'en-US';
         let searchText = '';
         let searchColumnIndex = -1;
@@ -142,7 +143,7 @@ class FoliumTable {
     
         function initColumns(tableColumns) {
             let columnsHTML = '<thead><tr id="columns">';
-            tableColumns.forEach(column => columnsHTML += `<th class="columnHeader sortHeader" id="${column.columnId}">${column.displayText}</th>`);
+            tableColumns.forEach((column, columnIndex) => columnsHTML += `<th class="columnHeader sortHeader" id="${column.columnId}">${headerRenderer(columnIndex, column.displayText, column)}</th>`);
             columnsHTML += "</tr>"
             
             table.append(columnsHTML + '</thead>');
@@ -254,8 +255,8 @@ class FoliumTable {
         
         rowsAsArrays = settings.rowsAsArrays !== undefined && settings.rowsAsArrays !== null && typeof settings.rowsAsArrays === 'boolean'  ? settings.rowsAsArrays : false;
 
-        this.cellRenderer = settings.cellRenderer !== undefined ? settings.cellRenderer : function(rowIndex, columnIndex, data, rowObject) { return data; };
-        cellRenderer = this.cellRenderer;
+        cellRenderer = settings.cellRenderer !== undefined ? settings.cellRenderer : function(rowIndex, columnIndex, data, rowObject) { return data; };
+        headerRenderer = settings.headerRenderer !== undefined ? settings.headerRenderer : function(columnIndex, displayText, columnObject) { return displayText; };
 
         if (settings.width !== undefined) $('.folium').css('width', `${settings.width}`);
         if (settings.height !== undefined) $('.folium').css('height', `${settings.height}`);
@@ -473,7 +474,7 @@ class FoliumTable {
                 const columnValue = rowsAsArrays ? rowToUpdate[columnIndex] : rowToUpdate[column.columnId];
     
                 // Render the value presented from the settings.
-                const value = this.cellRenderer(rowCount - 1, columnIndex, columnValue, rowToUpdate);
+                const value = cellRenderer(rowCount - 1, columnIndex, columnValue, rowToUpdate);
                 const tdOutput = columnValue === undefined ? '<td></td>' : `<td>${value}</td>`;
                 rowHTML += tdOutput;
             });
