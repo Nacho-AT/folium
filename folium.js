@@ -567,7 +567,10 @@ class FoliumTable {
             
             $(`#${settings.tableId} tbody`).remove();
             
-            if (settings.pagination.active) updateTableByPagination(searchResult);
+            if (settings.pagination.active) {
+                pagination.currentPage = 1;
+                updateTableByPagination(searchResult);
+            }
             else initRows(searchResult);
             
             return searchResult.length;
