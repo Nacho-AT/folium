@@ -407,7 +407,11 @@ class FoliumTable {
             });
     
             rowHTML += '</tr>';
-            $(`#${tableId} tr:last`).after(rowHTML);
+
+            const lastRowIndex = $(`#${tableId} tbody tr:last`).index();
+
+            if (lastRowIndex === -1) $(`#${tableId} tbody`).html(rowHTML);
+            else $(`#${tableId} tbody tr:last`).after(rowHTML);
     
         };
         _object.addRows = function(rows) {
@@ -446,8 +450,12 @@ class FoliumTable {
                 rowsHTML += rowHTML;
                 rowCount++;
             });
+            
+            const lastRowIndex = $(`#${tableId} tbody tr:last`).index();
 
-            $(`#${tableId} tr:last`).after(rowsHTML);
+            if (lastRowIndex === -1) $(`#${tableId} tbody`).html(rowsHTML);
+            else $(`#${tableId} tbody tr:last`).after(rowsHTML);
+
         };
     
         _object.updateRow = function(index, rowObject) {
