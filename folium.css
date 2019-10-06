@@ -3,6 +3,7 @@
     font-family: Tahoma, Geneva, sans-serif;
     font-size: 12px;
     border: 1px solid #cccccc;
+    background-color: #eeeeee;
     border-color: inherit;
     overflow:auto;
     box-shadow: 0 0 1px #000000;
@@ -82,10 +83,11 @@
 
   .foliumPageBar {
     font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-    height:22px;
+    height:20px;
     background-color: #313131;
-    margin-top:2px;
+    padding-top:2px;
     border: 1px solid #000000;
+    vertical-align: middle;
   }
   
   .foliumPageBar .pageBarButton {
@@ -106,12 +108,30 @@
   }
 
   .foliumPageBar .infoBox {
-    width: 200px;
     text-align: center;
-    margin-top: 2px;
+    padding: 2px 10px 1px 10px;
     background-color: #111111;
+    display:inline-block;
+    font-size: 12px;
     color: #ffffff;
     border:1px solid #000000;
+  }
+
+  .foliumPageBar .pageJumpComboBox {
+    border:1px solid #000000;
+    background-color: #111111;
+    color: #ffffff;
+  }
+
+  .foliumPageBar .pageInfoText {
+    padding-left: 5px;
+    text-align: right;
+    color: #FFFFFF;
+    font-size: 12px;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
   }
 
   .foliumPageBar .infoBox:focus {

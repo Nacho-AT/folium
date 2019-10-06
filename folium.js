@@ -130,8 +130,13 @@ class FoliumTable {
     
             const pageDataStartIndex = (pagination.currentPage - 1) * pagination.pageSize + 1;
             const pageDataEndIndex = pageDataStartIndex + tableRows.slice((pagination.currentPage - 1) * pagination.pageSize, pagination.currentPage * pagination.pageSize).length - 1;
-    
-            $(`#${tableId}pageInfo`).val(`${pageDataStartIndex}-${pageDataEndIndex} | Page: ${pagination.currentPage}/${pagination.numOfPages}`);
+            
+            $(`#${tableId}foliumPageJumpTo`).empty();
+            for (let i = 1 ; i <= pagination.numOfPages ; i++) $(`#${tableId}foliumPageJumpTo`).append(`<option value="${i}">${i}</option>`);
+
+            $(`#${tableId}foliumPageJumpTo option[value=${pagination.currentPage}]`).attr('selected','selected');
+
+            $(`#${tableId}pageInfo`).html(`${pageDataStartIndex}-${pageDataEndIndex} | Page: ${pagination.currentPage}/${pagination.numOfPages}`);
         }
     
         function updateTableByPagination(tableRows = settings.rows) {
@@ -272,7 +277,23 @@ class FoliumTable {
         // If pagination is active then set up the pagination settings.
         if (settings.pagination.active && typeof settings.pagination.size === 'number') {
             
-            $(`#${tableId}`).before(`<div class="foliumPageBar"><button id="${tableId}foliumPageFirst" class="pageBarButton">First</button><button class="pageBarButton" id="${tableId}foliumPagePrevious"><</button><input type="text" id="${tableId}pageInfo" class="infoBox" readonly /><button class="pageBarButton" id="${tableId}foliumPageNext">></button><button class="pageBarButton" id="${tableId}foliumPageLast">Last</button></div>`);
+            $(`#${tableId}`).before(`
+            <div class="foliumPageBar">
+                <button id="${tableId}foliumPageFirst" class="pageBarButton">First</button>
+                <button class="pageBarButton" id="${tableId}foliumPagePrevious"><</button>
+                <div id="${tableId}pageInfo" class="infoBox"></div>
+                <button class="pageBarButton" id="${tableId}foliumPageNext">></button>
+                <button class="pageBarButton" id="${tableId}foliumPageLast">Last</button>
+                <span class="pageInfoText">Jump to:</span>
+                <select id="${tableId}foliumPageJumpTo" class="pageJumpComboBox"></select></div>`);
+
+            $(`#${tableId}foliumPageJumpTo`).change(function() {
+                console.log($(this).val());
+                
+                pagination.currentPage = parseInt($(this).val());
+                updateTableByPagination();
+            });
+
             $('.foliumPageBar').css('width', $(`#${tableId}`).css('width'));
             pagination.pageSize = settings.pagination.size;
             updatePageBarInfo();
@@ -409,11 +430,7 @@ class FoliumTable {
     
             rowHTML += '</tr>';
 
-            const lastRowIndex = $(`#${tableId} tbody tr:last`).index();
-
-            if (lastRowIndex === -1) $(`#${tableId} tbody`).html(rowHTML);
-            else $(`#${tableId} tbody tr:last`).after(rowHTML);
-    
+            $(`#${tableId} tbody`).append(rowHTML);
         };
         _object.addRows = function(rows) {
             settings.rows = settings.rows.concat(rows);
@@ -452,11 +469,7 @@ class FoliumTable {
                 rowCount++;
             });
 
-            const lastRowIndex = $(`#${tableId} tbody tr:last`).index();
-
-            if (lastRowIndex === -1) $(`#${tableId} tbody`).html(rowsHTML);
-            else $(`#${tableId} tbody tr:last`).after(rowsHTML);
-
+            $(`#${tableId} tbody`).append(rowsHTML);
         };
     
         _object.updateRow = function(index, rowObject) {
