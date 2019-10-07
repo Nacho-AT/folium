@@ -40,9 +40,16 @@ class FoliumTable {
         
         // Set pagination object to default if it's not defined by user
         settings.pagination = settings.pagination === undefined ? {active : false, size : -1} : settings.pagination;
-          settings.sortable = settings.sortable === undefined ? false : settings.sortable;
-          settings.editable = settings.editable === undefined ? false : settings.editable;
+        settings.sortable = settings.sortable === undefined ? false : settings.sortable;
+        settings.editable = settings.editable === undefined ? false : settings.editable;
       
+        // If _ROW_ID column id exist then don't let the table to be drawn.
+        if(settings.columns.filter(column => column.columnId === '_ROW_ID').length > 0) {
+            console.error('_ROW_ID is specifically defined column for Folium Table. Please try to name this column with a different name.');
+            return;
+        }
+        settings.rows.forEach((row, index) => Object.defineProperty(row, '_ROW_ID', {value : index, writable : false, enumerable : false, configurable : false}));
+
         function setSelectedRow(rowIndex) {
             if (rowIndex === -1) {
                 selectedRow = -1;
@@ -130,17 +137,17 @@ class FoliumTable {
             const pageDataStartIndex = (pagination.currentPage - 1) * pagination.pageSize + 1;
             const pageDataEndIndex = pageDataStartIndex + tableRows.slice((pagination.currentPage - 1) * pagination.pageSize, pagination.currentPage * pagination.pageSize).length - 1;
 
-            if ($(`#${tableId}foliumPageJumpTo option`).length !== pagination.numOfPages) {
-                $(`#${tableId}foliumPageJumpTo`).empty();
+            if ($(`#foliumPageJumpTo option`).length !== pagination.numOfPages) {
+                $(`#foliumPageJumpTo`).empty();
                 
                 let optionList = '';
 
                 for (let i = 1 ; i <= pagination.numOfPages ; i++) 
                     optionList += `<option value="${i}">${i}</option>`;
                 
-                $(`#foliumPageSwitcher`).html(`<select id="${tableId}foliumPageJumpTo" class="pageJumpComboBox">${optionList}</select> / ${pagination.numOfPages}`);
+                $(`#foliumPageSwitcher`).html(`<select id="foliumPageJumpTo" class="pageJumpComboBox">${optionList}</select> / ${pagination.numOfPages}`);
                 
-                $(`#${tableId}foliumPageJumpTo`).change(function() {
+                $(`#foliumPageJumpTo`).change(function() {
                     
                     pagination.currentPage = parseInt($(this).val());
                     updateTableByPagination();
@@ -148,8 +155,8 @@ class FoliumTable {
 
             }
 
-            $(`#${tableId}foliumPageJumpTo option:selected`).prop('selected', false);
-            $(`#${tableId}foliumPageJumpTo option[value=${pagination.currentPage}]`).prop('selected', true);
+            $(`#foliumPageJumpTo option:selected`).prop('selected', false);
+            $(`#foliumPageJumpTo option[value=${pagination.currentPage}]`).prop('selected', true);
             $(`#currentPageInfo`).html(`${pageDataStartIndex}-${pageDataEndIndex} | Page: `);
         }
     
@@ -289,7 +296,7 @@ class FoliumTable {
         // If pagination is active then set up the pagination settings.
         if (settings.pagination.active && typeof settings.pagination.size === 'number') {
             
-            $(`#${tableId}`).before(`<div class="foliumPageBar"><button id="${tableId}foliumPageFirst" class="pageBarButton">First</button><button class="pageBarButton" id="${tableId}foliumPagePrevious"><</button><div id="${tableId}pageInfo" class="infoBox"><span id="currentPageInfo"></span><div id="foliumPageSwitcher"><select id="${tableId}foliumPageJumpTo" class="pageJumpComboBox"></select> / 0</div></div><button class="pageBarButton" id="${tableId}foliumPageNext">></button><button class="pageBarButton" id="${tableId}foliumPageLast">Last</button></div>`);
+            $(`#${tableId}`).before(`<div class="foliumPageBar"><button id="${tableId}foliumPageFirst" class="pageBarButton">First</button><button class="pageBarButton" id="${tableId}foliumPagePrevious"><</button><div id="${tableId}pageInfo" class="infoBox"><span id="currentPageInfo"></span><div id="foliumPageSwitcher"><select id="foliumPageJumpTo" class="pageJumpComboBox"></select> / 0</div></div><button class="pageBarButton" id="${tableId}foliumPageNext">></button><button class="pageBarButton" id="${tableId}foliumPageLast">Last</button></div>`);
 
             $('.foliumPageBar').css('width', $(`#${tableId}`).css('width'));
             pagination.pageSize = settings.pagination.size;
@@ -396,6 +403,8 @@ class FoliumTable {
         });
 
         _object.addRow = function(rowObject) {
+            
+            Object.defineProperty(rowObject, '_ROW_ID', {value : index, writable : false, enumerable : false, configurable : false});
             settings.rows.push(rowObject);
             rowCount += 1;
             // If searching is active then render the table with search result by calling search function again.
@@ -430,6 +439,7 @@ class FoliumTable {
             $(`#${tableId} tbody`).append(rowHTML);
         };
         _object.addRows = function(rows) {
+            rows.forEach((row, index) => Object.defineProperty(row, '_ROW_ID', {value : index, writable : false, enumerable : false, configurable : false}));
             settings.rows = settings.rows.concat(rows);
             //rowCount += rows.length;
 
