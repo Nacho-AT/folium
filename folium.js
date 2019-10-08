@@ -51,7 +51,7 @@ class FoliumTable {
             return;
         }
         settings.rows.forEach(row => {
-            Object.defineProperty(row, '_ROW_ID', {value : nextRowId, writable : false, enumerable : false, configurable : false});
+            Object.defineProperty(row, '_ROW_ID', {value : nextRowId, writable : false, enumerable : true, configurable : false});
             nextRowId++;
         });
 
@@ -224,6 +224,19 @@ class FoliumTable {
             events.get('rowDoubleClicked')(rowIndex);
          });
         }
+
+        function rowIndexToModel(rowIndex) {
+            if (rowIndex === -1) return -1;
+
+            if (searchingActive) {
+                const rowIndexInSearchModel = settings.pagination.active ? (pagination.currentPage - 1) * pagination.pageSize  + rowIndex : rowIndex;
+                const rowId = searchResult[rowIndexInSearchModel]._ROW_ID;
+                const rowIndexInModel = settings.rows.map(row => row._ROW_ID).indexOf(rowId);
+
+                return rowIndexInModel;
+            }
+            return settings.pagination.active ? (pagination.currentPage - 1) * pagination.pageSize  + rowIndex : rowIndex;
+        }
     
         function activateCellEditor(tdObject) {
 
@@ -231,8 +244,9 @@ class FoliumTable {
             const inputBoxWidth = tdObject.css('width');
             const rowIndex = tdObject.parent().index();
             const columnIndex = tdObject.index();
+            const rowIndexModel = settings.pagination.active ? rowIndexToModel(rowIndex) : rowIndex;
             const columnId = settings.columns[columnIndex].columnId;
-            const value = rowsAsArrays ? settings.rows[rowIndex][columnIndex] : settings.rows[rowIndex][columnId];
+            const value = rowsAsArrays ? settings.rows[rowIndexModel][columnIndex] : settings.rows[rowIndexModel][columnId];
 
             if (!settings.editable) return;
 
@@ -246,10 +260,10 @@ class FoliumTable {
                 // Parse the new value according to column data type.
                 newValue = dataTypeParses.get(settings.columns[columnIndex].dataType)(newValue);
                 
-                if (rowsAsArrays) settings.rows[rowIndex][columnIndex] = newValue;
-                else settings.rows[rowIndex][columnId] = newValue;
+                if (rowsAsArrays) settings.rows[rowIndexModel][columnIndex] = newValue;
+                else settings.rows[rowIndexModel][columnId] = newValue;
 
-                const valueRendered = cellRenderer(rowIndex, columnIndex, newValue, settings.rows[rowIndex]);
+                const valueRendered = cellRenderer(rowIndex, columnIndex, newValue, settings.rows[rowIndexModel]);
 
                 tdObject.html(valueRendered);
     
@@ -351,7 +365,7 @@ class FoliumTable {
          $(`#${tableId} th`).click(function() {
             const selectedHeaderIndex = $(this).index();
             sortingColumnIndex = selectedHeaderIndex;
-
+            setSelectedColumn(selectedHeaderIndex);
             if (settings.sortable) {
                 sortTable(selectedHeaderIndex);
                 $(`#${settings.tableId} tbody`).remove();
@@ -407,7 +421,7 @@ class FoliumTable {
 
         _object.addRow = function(rowObject) {
             
-            Object.defineProperty(rowObject, '_ROW_ID', {value : nextRowId, writable : false, enumerable : false, configurable : false});
+            Object.defineProperty(rowObject, '_ROW_ID', {value : nextRowId, writable : false, enumerable : true, configurable : false});
             nextRowId++;
 
             settings.rows.push(rowObject);
@@ -446,7 +460,7 @@ class FoliumTable {
         _object.addRows = function(rows) {
 
             rows.forEach((row, index) => {
-                Object.defineProperty(row, '_ROW_ID', {value : nextRowId, writable : false, enumerable : false, configurable : false})
+                Object.defineProperty(row, '_ROW_ID', {value : nextRowId, writable : false, enumerable : true, configurable : false})
                 nextRowId++;  
             });
             settings.rows = settings.rows.concat(rows);
@@ -559,9 +573,8 @@ class FoliumTable {
             return selectedRow;
         };
         _object.selectedRowInModel = function() {
-            if (settings.pagination.active) return (pagination.currentPage - 1) * pagination.pageSize  + selectedRow;
-        
-            return selectedRow;
+
+            return rowIndexToModel(selectedRow);
         };
         _object.selectedColumn = function() {
             return selectedColumn;
