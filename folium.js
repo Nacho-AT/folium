@@ -9,10 +9,8 @@ class FoliumTable {
             console.error('"columns" property is not defined in table settings. Please make sure that it is defined in your table settings.');
             return;
         }
-        else if (settings.rows === undefined) {
-            console.error('"rows" property is not defined in table settings. Please make sure that it is defined in your table settings.');
-            return;
-        }
+
+        settings.rows = settings.rows === undefined ? [] : settings.rows;
 
         const _object = this;
         let rowCount = settings.rows.length;

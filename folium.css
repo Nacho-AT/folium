@@ -88,6 +88,10 @@
     padding-top:2px;
     border: 1px solid #000000;
     vertical-align: middle;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
   }
   
   .foliumPageBar .pageBarButton {
