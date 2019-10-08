@@ -13,8 +13,10 @@ class FoliumTable {
         settings.rows = settings.rows === undefined ? [] : settings.rows;
 
         const _object = this;
+
         let rowCount = settings.rows.length;
         let columnCount = settings.columns.length;
+        let nextRowId = 0;
         let selectedRow = -1;
         let selectedRowObject = undefined;
         let selectedColumn = -1;
@@ -24,8 +26,10 @@ class FoliumTable {
         let headerRenderer = undefined;
         let tableLocale = 'en-US';
         let searchText = '';
+        let searchingActive = false;
         let searchColumnIndex = -1;
         let sortingColumnIndex = -1;
+        let searchResult = undefined;
         let rowsAsArrays = undefined;
        
         const pagination = { pageSize : -1, numOfPages : 0, currentPage : 1 };
@@ -46,7 +50,10 @@ class FoliumTable {
             console.error('_ROW_ID is specifically defined column for Folium Table. Please try to name this column with a different name.');
             return;
         }
-        settings.rows.forEach((row, index) => Object.defineProperty(row, '_ROW_ID', {value : index, writable : false, enumerable : false, configurable : false}));
+        settings.rows.forEach(row => {
+            Object.defineProperty(row, '_ROW_ID', {value : nextRowId, writable : false, enumerable : false, configurable : false});
+            nextRowId++;
+        });
 
         function setSelectedRow(rowIndex) {
             if (rowIndex === -1) {
@@ -116,11 +123,12 @@ class FoliumTable {
                     sortingType *= -1;
                     sortingOrders.set(columnId, sortingType);
                 }
-                const sortFunction = columnSortingFunctions.get(columnSortingType);
-                
-                const elementAccessor = rowsAsArrays ? columnIndex : columnId ;
 
-                settings.rows.sort((a, b) => sortingType * sortFunction(a[elementAccessor], b[elementAccessor]));                
+                const sortFunction = columnSortingFunctions.get(columnSortingType);
+                const elementAccessor = rowsAsArrays ? columnIndex : columnId;
+
+                if (searchingActive) searchResult.sort((a, b) => sortingType * sortFunction(a[elementAccessor], b[elementAccessor]));
+                else settings.rows.sort((a, b) => sortingType * sortFunction(a[elementAccessor], b[elementAccessor]));
             }
             
         }
@@ -148,7 +156,7 @@ class FoliumTable {
                 $(`#foliumPageJumpTo`).change(function() {
                     
                     pagination.currentPage = parseInt($(this).val());
-                    updateTableByPagination();
+                    updateTableByPagination(searchingActive ? searchResult : settings.rows);
                 });
 
             }
@@ -182,10 +190,7 @@ class FoliumTable {
                 let rowHTML = `<tr class="${rowClass}">`;
     
                 settings.columns.forEach((column, columnIndex) => {
-                    let columnValue = undefined;
-
-                    if (rowsAsArrays) columnValue = row[columnIndex];
-                    else columnValue = row[column.columnId];
+                    const columnValue = rowsAsArrays ? row[columnIndex] : row[column.columnId];
                     
                     // Render the value presented from the settings.
                     const value = cellRenderer(index, columnIndex, columnValue, row);
@@ -305,23 +310,23 @@ class FoliumTable {
                 if (pagination.currentPage + 1 > pagination.numOfPages) return;
                 
                 pagination.currentPage++;
-                updateTableByPagination();
+                updateTableByPagination(searchingActive ? searchResult : settings.rows);
             });
             $(`#${tableId}foliumPagePrevious`).click(() => {
                 if (pagination.currentPage - 1 < 1) return;
                 
                 pagination.currentPage--;
-                updateTableByPagination();
+                updateTableByPagination(searchingActive ? searchResult : settings.rows);
             });
             $(`#${tableId}foliumPageFirst`).click(() => {
                 if (pagination.currentPage === 1) return ; 
                 pagination.currentPage = 1;
-                updateTableByPagination();
+                updateTableByPagination(searchingActive ? searchResult : settings.rows);
             });
             $(`#${tableId}foliumPageLast`).click(() => {
                 if (pagination.currentPage === pagination.numOfPages) return ;
                 pagination.currentPage = pagination.numOfPages;
-                updateTableByPagination();
+                updateTableByPagination(searchingActive ? searchResult : settings.rows);
             });
         }
         if (settings.pagination.size === undefined) console.error('Pagination size is not defined! Pagination skipped.');
@@ -350,7 +355,7 @@ class FoliumTable {
             if (settings.sortable) {
                 sortTable(selectedHeaderIndex);
                 $(`#${settings.tableId} tbody`).remove();
-                initRows();
+                initRows(searchingActive ? searchResult : settings.rows);
             }
             
          });
@@ -402,7 +407,9 @@ class FoliumTable {
 
         _object.addRow = function(rowObject) {
             
-            Object.defineProperty(rowObject, '_ROW_ID', {value : index, writable : false, enumerable : false, configurable : false});
+            Object.defineProperty(rowObject, '_ROW_ID', {value : nextRowId, writable : false, enumerable : false, configurable : false});
+            nextRowId++;
+
             settings.rows.push(rowObject);
             rowCount += 1;
             // If searching is active then render the table with search result by calling search function again.
@@ -437,7 +444,11 @@ class FoliumTable {
             $(`#${tableId} tbody`).append(rowHTML);
         };
         _object.addRows = function(rows) {
-            rows.forEach((row, index) => Object.defineProperty(row, '_ROW_ID', {value : index, writable : false, enumerable : false, configurable : false}));
+
+            rows.forEach((row, index) => {
+                Object.defineProperty(row, '_ROW_ID', {value : nextRowId, writable : false, enumerable : false, configurable : false})
+                nextRowId++;  
+            });
             settings.rows = settings.rows.concat(rows);
             //rowCount += rows.length;
 
@@ -589,16 +600,30 @@ class FoliumTable {
 
         _object.search = function(value, columnIndex = -1) {
     
+            // If the text is empty or undefined then return original rows.
+            if (value === undefined || value === null || value === '') {
+                searchResult = undefined;
+                searchText = '';
+                searchingActive = false;
+
+                if (settings.pagination.active) {
+                    pagination.currentPage = 1;
+                    updateTableByPagination();
+                }
+                else initRows();
+                
+                return settings.rows.length;
+            }
+
             searchText = value;
-            let searchResult = null;
             
             if (rowsAsArrays) {
                 if (columnIndex !== -1) searchResult = settings.rows.filter(row => row[columnIndex].toLowerCase(tableLocale).includes(value.toLowerCase(tableLocale))); 
-                else searchResult = settings.rows.filter(row => Object.values(row).join(';').toLowerCase(tableLocale).includes(value.toLowerCase(tableLocale)));
+                else searchResult = settings.rows.filter(row => Object.values(row).join('`').toLowerCase(tableLocale).includes(value.toLowerCase(tableLocale)));
             }
             else {
                 if (columnIndex !== -1) searchResult = settings.rows.filter(row => row[settings.columns[columnIndex].columnId].toLowerCase(tableLocale).includes(value.toLowerCase(tableLocale))); 
-                else searchResult = settings.rows.filter(row => Object.values(row).join(';').toLowerCase(tableLocale).includes(value.toLowerCase(tableLocale)));
+                else searchResult = settings.rows.filter(row => Object.values(row).join('`').toLowerCase(tableLocale).includes(value.toLowerCase(tableLocale)));
             }
             
             $(`#${settings.tableId} tbody`).remove();
@@ -608,6 +633,8 @@ class FoliumTable {
                 updateTableByPagination(searchResult);
             }
             else initRows(searchResult);
+
+            searchingActive = true;
             
             return searchResult.length;
         };
@@ -645,4 +672,4 @@ $.fn.FoliumTable = function(settings) {
     this[0].foliumObject = foliumTable;
 
     return this[0].foliumObject;
-}
+};
