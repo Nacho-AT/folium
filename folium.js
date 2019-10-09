@@ -1,5 +1,5 @@
 /**
- * FoliumTable Version: 1.0.8-BETA 
+ * FoliumTable Version: 1.1.0-BETA 
  */
 class FoliumTable {
 
