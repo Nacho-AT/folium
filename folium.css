@@ -83,6 +83,8 @@
 
   .foliumPageBar {
     font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    font-size: 12px;
+    color:#FFFFFF;
     height:22px;
     background-color: #313131;
     padding-top:2px;
@@ -115,8 +117,6 @@
     text-align: center;
     background-color: #111111;
     display:inline-block;
-    font-size: 12px;
-    color: #ffffff;
     border:1px solid #000000;
   }
 
@@ -143,4 +143,8 @@
 
   .foliumPageBar .infoBox:focus {
     outline: none !important;
+  }
+
+  .foliumPageBar .pageBarText {
+    padding: 0 2px 0 2px;
   }

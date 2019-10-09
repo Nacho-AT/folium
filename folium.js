@@ -18,6 +18,7 @@ class FoliumTable {
         let columnCount = settings.columns.length;
         let nextRowId = 0;
         let selectedRow = -1;
+        let selectedRowId = -1;
         let selectedRowObject = undefined;
         let selectedColumn = -1;
         let selectedColumnObject = undefined;
@@ -31,7 +32,8 @@ class FoliumTable {
         let sortingColumnIndex = -1;
         let searchResult = undefined;
         let rowsAsArrays = undefined;
-       
+        let rowIdsRendered = [];
+        
         const pagination = { pageSize : -1, numOfPages : 0, currentPage : 1 };
         const sortingOrders = new Map();
         const columnSortingFunctions = new Map();
@@ -41,10 +43,11 @@ class FoliumTable {
         events.set('rowDoubleClicked', function(rowIndex) {}); 
         
         // Set pagination object to default if it's not defined by user
-        settings.pagination = settings.pagination === undefined ? {active : false, size : -1} : settings.pagination;
-        settings.sortable = settings.sortable === undefined ? false : settings.sortable;
-        settings.editable = settings.editable === undefined ? false : settings.editable;
-      
+        settings.pagination = settings.pagination === undefined ? { active : false, size : -1 } : settings.pagination;
+        settings.sortable = settings.sortable === undefined || typeof settings.sortable !== 'boolean' ? false : settings.sortable;
+        settings.editable = settings.editable === undefined || typeof settings.editable !== 'boolean' ? false : settings.editable;
+        settings.showSearchHint = settings.showSearchHint === undefined || typeof settings.showSearchHint !== 'boolean' ? true : settings.showSearchHint;
+        
         // If _ROW_ID column id exist then don't let the table to be drawn.
         if(settings.columns.filter(column => column.columnId === '_ROW_ID').length > 0) {
             console.error('_ROW_ID is specifically defined column for Folium Table. Please try to name this column with a different name.');
@@ -62,11 +65,10 @@ class FoliumTable {
                 return;
             }
     
-            if(tableId !== $(document).attr('activeTable')){
-                return;
-            }
-    
+            if(tableId !== $(document).attr('activeTable')) return;
+            
             selectedRow = rowIndex;
+            selectedRowId = settings.rows[rowIndexToModel(rowIndex)]._ROW_ID;
             if (selectedRowObject !== undefined) selectedRowObject.removeClass('selectedRow');
             const domRowIndex = new Number(rowIndex + 1).toString();
     
@@ -77,11 +79,8 @@ class FoliumTable {
     
         function setSelectedColumn(columnIndex) {
             if (columnIndex >= columnCount) return;
-    
-            if(tableId !== $(document).attr('activeTable')){
-                return;
-            }
-    
+            if(tableId !== $(document).attr('activeTable')) return;
+            
             $(`#${tableId} th:eq(${selectedColumn})`).removeClass('selectedColumnHeader');
             selectedColumn = columnIndex;
     
@@ -148,10 +147,10 @@ class FoliumTable {
                 
                 let optionList = '';
 
-                for (let i = 1 ; i <= pagination.numOfPages ; i++) 
+                for (let i = 2 ; i <= pagination.numOfPages ; i++) 
                     optionList += `<option value="${i}">${i}</option>`;
                 
-                $(`#foliumPageSwitcher`).html(`<select id="foliumPageJumpTo" class="pageJumpComboBox">${optionList}</select> / ${pagination.numOfPages}`);
+                $(`#foliumPageSwitcher`).html(`<select id="foliumPageJumpTo" class="pageJumpComboBox"><option value="1">1</option>${optionList}</select> / ${pagination.numOfPages}`);
                 
                 $(`#foliumPageJumpTo`).change(function() {
                     
@@ -184,6 +183,7 @@ class FoliumTable {
         function initRows(tableRows = settings.rows) {
             let rows = settings.pagination.active ? tableRows.slice((pagination.currentPage - 1) * pagination.pageSize, pagination.currentPage * pagination.pageSize) : tableRows;
             let rowsHTML = '';
+            rowIdsRendered = [];
 
             rows.forEach((row, index) => {
                 const rowClass = index % 2 === 0 ? 'evenRow' : 'oddRow';
@@ -200,9 +200,26 @@ class FoliumTable {
     
                 rowHTML += '</tr>';
                 rowsHTML += rowHTML;
+                rowIdsRendered.push(row._ROW_ID);
             });
 
             table.append('<tbody>' + rowsHTML + '</tbody>');
+
+            //If the row is selected as before then render it as selected row.
+            const selectedRowIdIndex = rows.map(row => row._ROW_ID).indexOf(selectedRowId);
+            
+            if (selectedRowIdIndex !== -1) {
+                const selectedTrObject = $(`#${tableId} tbody tr:eq(${selectedRowIdIndex})`);
+                
+                selectedTrObject.removeClass();
+                selectedTrObject.addClass('selectedRow');
+
+                const selectedTdObject = selectedTrObject.find(`td:eq(${selectedColumn})`);
+                selectedTdObject.addClass('selectedColumn');
+
+                selectedRowObject = selectedTrObject;
+                selectedColumnObject = selectedTdObject;       
+            }
     
         $(`#${tableId}`).on('click', 'td', function(){
             const selectedRowObject = $(this).parent();
@@ -313,7 +330,7 @@ class FoliumTable {
         // If pagination is active then set up the pagination settings.
         if (settings.pagination.active && typeof settings.pagination.size === 'number') {
             
-            $(`#${tableId}`).before(`<div class="foliumPageBar"><button id="${tableId}foliumPageFirst" class="pageBarButton">First</button><button class="pageBarButton" id="${tableId}foliumPagePrevious"><</button><div id="${tableId}pageInfo" class="infoBox"><span id="currentPageInfo"></span><div id="foliumPageSwitcher"><select id="foliumPageJumpTo" class="pageJumpComboBox"></select> / 0</div></div><button class="pageBarButton" id="${tableId}foliumPageNext">></button><button class="pageBarButton" id="${tableId}foliumPageLast">Last</button></div>`);
+            $(`#${tableId}`).before(`<div class="foliumPageBar"><button id="${tableId}foliumPageFirst" class="pageBarButton">First</button><button class="pageBarButton" id="${tableId}foliumPagePrevious"><</button><div id="${tableId}pageInfo" class="infoBox"><span id="currentPageInfo"></span><div id="foliumPageSwitcher"><select id="foliumPageJumpTo" class="pageJumpComboBox"><option value="1">1</option></select> / 0</div></div><button class="pageBarButton" id="${tableId}foliumPageNext">></button><button class="pageBarButton" id="${tableId}foliumPageLast">Last</button><span id="searchInfo" class="pageBarText"></span></div>`);
 
             $('.foliumPageBar').css('width', $(`#${tableId}`).css('width'));
             pagination.pageSize = settings.pagination.size;
@@ -504,13 +521,10 @@ class FoliumTable {
     
         _object.updateRow = function(index, rowObject) {
     
+            if (rowsAsArrays) settings.rows[index] = rowObject;
+            else Object.keys(rowObject).forEach(property => settings.rows[index][property] = rowObject[property]);
+    
             const rowToUpdate = settings.rows[index];
-            
-            if (rowsAsArrays) Object.keys(rowObject).forEach(property => {
-                const columnIndexToUpdate = settings.columns.map(column => column.columnId).indexOf(property);
-                rowToUpdate[columnIndexToUpdate] = rowObject[property];
-            });
-            else Object.keys(rowObject).forEach(property => rowToUpdate[property] = rowObject[property]);
             let rowHTML = '';
             
             settings.columns.forEach((column, columnIndex) => {
@@ -521,30 +535,23 @@ class FoliumTable {
                 const tdOutput = columnValue === undefined ? '<td></td>' : `<td>${value}</td>`;
                 rowHTML += tdOutput;
             });
-            let updateIndex = index + 1;
-            if (settings.pagination.active) {
-                const startRange = (pagination.currentPage - 1) * pagination.pageSize;
-                const endRange = pagination.currentPage * pagination.pageSize - 1;
-                // if the updated row index is present in the current page, then update 
-                if (index >= startRange && index <= endRange){
-                    updateIndex = index - startRange + 1; // +1 for omitting header
-                    $(`#${tableId} tr:eq(${updateIndex})`).html(rowHTML);
-                } 
-                
-            }
-            else $(`#${tableId} tr:eq(${updateIndex})`).html(rowHTML);
+
+            const rowTableUpdateIndex = rowIdsRendered.indexOf(rowToUpdate._ROW_ID);
+            if (rowTableUpdateIndex !== -1) $(`#${tableId} tbody tr:eq(${rowTableUpdateIndex})`).html(rowHTML);
         };
+
         _object.updateRows = function(indexes, rows) {
-            for (let i = 0 ; i < indexes.length ; i++) {
-                this.updateRow(indexes[i], rows[i]);
-            }
+            indexes.forEach(i => this.updateRow(i, rows[i]));
         };
     
         _object.deleteRow = function(index) {
-            settings.rows.splice(index, 1);
+            const removedRow = settings.rows.splice(index, 1)[0];
+
+            if (removedRow === undefined) return;
+            
             rowCount -= 1;
             // If searching is active then render the table with search result by callcing search function again.
-            if (searchText !== '') {
+            if (searchingActive) {
                 this.search(searchText, searchColumnIndex);
                 return;
             }
@@ -552,9 +559,15 @@ class FoliumTable {
                 updateTableByPagination();
                 return;
             }
-            setSelectedRow(index - 1);
-            const domTableRemoveIndex = index + 1;
-            $(`#${tableId} tr:eq(${domTableRemoveIndex})`).remove();
+
+            const domTableRemoveIndex = rowIdsRendered.indexOf(removedRow._ROW_ID);
+
+            // If the removed row is not rendered on the page then skip removing.
+            if (domTableRemoveIndex === -1) return;
+
+            setSelectedRow(domTableRemoveIndex !== 0 ? domTableRemoveIndex - 1 : 0);
+
+            $(`#${tableId} tbody tr:eq(${domTableRemoveIndex})`).remove();
     
             // Change the row class
             for (let i = index ; i < rowCount ; i++) {
@@ -566,7 +579,22 @@ class FoliumTable {
     
         };
         _object.deleteRows = function(indexes) {
-            indexes.forEach(index => this.deleteRow(index));
+            const indexesToBeRemoved = indexes.filter(index => index < rowCount);
+            settings.rows = settings.rows.filter((row, index) => indexesToBeRemoved.indexOf(index) === -1);
+            rowCount -= indexesToBeRemoved.length;
+
+            // If searching is active then render the table with search result by callcing search function again.
+            if (searchingActive) {
+                this.search(searchText, searchColumnIndex);
+                return;
+            }
+            if (settings.pagination.active) {
+                updateTableByPagination();
+                return;
+            }
+
+            $(`#${settings.tableId} tbody`).remove();
+            initRows();
         };
     
         _object.selectedRow = function() {
@@ -618,7 +646,7 @@ class FoliumTable {
                 searchResult = undefined;
                 searchText = '';
                 searchingActive = false;
-
+                $('#searchInfo').html('');
                 if (settings.pagination.active) {
                     pagination.currentPage = 1;
                     updateTableByPagination();
@@ -649,7 +677,10 @@ class FoliumTable {
 
             searchingActive = true;
             
-            return searchResult.length;
+            if (settings.showSearchHint)
+                $('#searchInfo').html(`Search Results for "${searchText}" presented` + (columnIndex !== -1 ? ` according to <b>${settings.columns[columnIndex].displayText}</b> column.` : '.'));
+            
+                return searchResult.length;
         };
 
         _object.clear = function() {
@@ -667,12 +698,9 @@ class FoliumTable {
             pagination.numOfPages = 0;
 
             if (settings.pagination.active) updatePageBarInfo(settings.rows);
-        
         };
 
-// end
     }
-
 }
 
 $.fn.FoliumTable = function(settings) {
