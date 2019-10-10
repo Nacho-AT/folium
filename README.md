@@ -46,7 +46,7 @@ const tableSettings = {
                     {columnId : "nationality", displayText  : "Nationality"},
                     {columnId : "location", displayText  : "Location"}
                   ],
-  //Required
+  //Not Required but this will be the initial row model for the table.
         rows: [
                 {username: 'jsmith', name : "John", surname : "Smith", emailAddress : 'foo@bar.com', age : 30, phoneNumber : '+1 111 111 111', nationality : 'American', location : 'San Francisco/CA'},
                 {username: 'jasmith', name : "Jane", surname : "Smith", emailAddress : '', age : 29, phoneNumber : '', nationality : '', location : ''},
@@ -59,9 +59,9 @@ $('#foliumTableId').FoliumTable(tableSettings);
 
 ```
 
-Minimal requirement of initializing Folium Table is to provide an object that possesses columns and rows properties. ***columns*** property is an array of objects that define columns for the table. A column object must have "**columnId**" that defines particular identity and "**displayText**" that will be presented on the table header. An optional property **dataType** is to define the data type of the column. Available data types are *number*, *float*, *integer*, *datetime* as well as *string*. The default data type is *string*.  
+Minimal requirement of initializing Folium Table is to provide an object that possesses columns property. ***columns*** property is an array of objects that define the columns of the table. A column object must have "**columnId**" that defines particular identity of the column as well as "**displayText**" that will be presented on the table header. An optional property **dataType** is to define the data type of the column. Available data types are *number*, *float*, *integer*, *datetime* as well as *string*. The default data type is *string*.  
 
-***rows*** property is an array of row objects which defines rows for the table. A row object must have properties that match the column ids defined in **columns** array.  
+***rows*** property is an optional property which is an array of row objects in which defines initial rows of the table. A row object must have properties that match the column ids defined in **columns** array. Rows can be defined as array as well. In order to activate this functionality, ***rowsAsArrays*** must be defined.
 
 ### Define rows as arrays
 
@@ -83,7 +83,6 @@ myFoliumTable.addRow(['mweiss', "Michael", "Weiss", 'michaelweiss@foobar.com', 2
 myFoliumTable.addRows([[/*row data 1*/], [/*row data 2*/]]);
 
 ```
-*Note:* There is no change in terms of updating rows. When there is a need to update rows, column ids have to be provided.
 
 ### Accessing FoliumTable Object
 
@@ -109,7 +108,8 @@ To sort the table, clicking the table header will sort the table in ascending, d
 
 ### Searching table
 
-Folium Table supports searching by providing ***search(searchText, columnIndex = -1)*** function. Since Folium's approach is for designing desktop application tables. It does not create a search input box by default. It lets programmers to decide how they want to use this functionality. **searchText** parameter is for searching the text on the entire rows of the table. The second parameter **columnIndex** is an optional parameter which search text will be applied to a specific column. When search() function succeeds, it renders the table with the filtered result and returns the number of filtered rows.
+Folium Table supports searching by providing ***search(searchText, columnIndex = -1)*** function. Since Folium's approach is for designing desktop application tables. It does not create a search input box by default. It lets programmers to decide how they want to use this functionality. **searchText** parameter is for searching the text on the entire rows of the table. The second parameter **columnIndex** is an optional parameter which search text will be applied to a specific column. When search() function succeeds, it renders the table with the filtered result and returns the number of filtered rows.  
+If pagination is active, An information message regarding searching is presented on the pagination bar.
 
 ```html
 <input type="text" id="searchBox" />
@@ -128,6 +128,19 @@ $('#searchBox').change(function(){
     // Optional search searchBoxText in zeroth column (first column)
     foliumTable.search(searchBoxText, 0);
 });
+```
+
+#### How to disable the search hint on the pagination bar?
+
+![searchHint](https://raw.githubusercontent.com/cemozden/folium/master/readme_pics/search_hint.png)
+
+By default, The search hint is presented on pagination bar, In order to disable it, The ***showSearchHint*** parameter must be set to false in the table settings.
+
+```javascript
+const tableSettings = {
+...
+showSearchHint : false
+};
 ```
 
 ### Editable table
@@ -157,11 +170,11 @@ const tableSettings = {
 
 ![cellRendering](https://raw.githubusercontent.com/cemozden/folium/master/readme_pics/cellrenderer.png)
 
-Sometimes, We might be supposed to render table cells in a different format. For Example, we might want to add links, input objects and other html objects into our table cells. To achieve that, We can provide a cell renderer function and assign the function to **cellRenderer** property of the table settings object. cellRenderer function is called for each cell during the table rendering. The function has to have 4 parameters provided
+For the sake of presenting our table data better, We might be supposed to render table cells in a different format. For Instance, we might want to add links, input objects and other html objects into our table cells. To achieve that, We can provide a cell renderer function and assign the function to **cellRenderer** property of the table settings object. cellRenderer function is being called for each cell during the table rendering. The function has to have 4 parameters provided
 (rowIndex, columnIndex, data, rowObject)
-* *rowIndex*: The row index which is being rendered at the moment.
-* *columnIndex*: The column index which is being rendered at the moment.
-* *data*: The provided data from the rows model for the cell.
+* *rowIndex*: The row index of the cell that is being rendered at the moment.
+* *columnIndex*: The column index of the cell that is being rendered at the moment.
+* *data*: The cell data from the rows model for the cell that is being rendered.
 * *rowObject*: The row object defined in rows model for the row that is being rendered at the moment.
 
 ```javascript
@@ -178,6 +191,15 @@ const tableSettings = {
         }
 };
 ```
+
+### Header Rendering
+![headerRendering](https://raw.githubusercontent.com/cemozden/folium/master/readme_pics/headerrenderer.png)   
+
+Folium allows programmers to change how to render the headers of the table. This feature is pretty similar to cell rendering with only one difference. The rendering function consists of 3 parameters.
+
+* *columnIndex*: The column index of the header that is being rendered at the moment.
+* *displayText*: The display text of the header which is defined in the table settings.
+* *columnObject*: The column object defined in columns model for the column that is being rendered at the moment.
 
 ### Pagination
 
@@ -207,7 +229,7 @@ myFoliumTable.addRow({username: 'asatou', name : "Alan", surname : "Watts", emai
 myFoliumTable.addRows([{username: 'asatou', name : "Alan", surname : "Watts", emailAddress : 'awatts@foobar.com', age : 58, phoneNumber : '+1 111 111 111', nationality : 'British', location : 'California/USA'}]);
 
 ```
-To update the existing rows, **updateRow(index, rowObject)** function could be used as the following
+To update the existing rows, **updateRow(index, rowObject)** function could be used as the following.
 
 ```javascript
 let myFoliumTable = $('#foliumTableId').FoliumTable();
@@ -221,6 +243,12 @@ myFoliumTable.updateRow(0, {username: 'newUsername'});
    First element of the indexes matches with the first element of rows variable
 */
 myFoliumTable.updateRows([0, 1], [{username: 'newNickname1'}, {username : 'newNickname2'}]);
+
+// If rowsAsArray is true, then the whole row array must be passed.
+myFoliumTable.updateRow(0, ['jsmith', 'John', 'Smith', 'foo@bar.com', 45, '+1 111 111 111','American', 'San Francisco/CA']);
+
+myFoliumTable.updateRows([0, 1], [['jsmith', 'John', 'Smith', 'foo@bar.com', 45, '+1 111 111 111','American', 'San Francisco/CA'], ['jasmith', "Jane", "Smith", '', 29, '', '', '']]); 
+
 ```
 
 To delete the existing rows **deleteRow(index)** method could be used as the following
@@ -247,6 +275,15 @@ Folium provides programmers table state information by the following methods
 * ***getRows()***: returns the model of the table.
 * ***currentPage()***: returns the current page number of the table in case of pagination is active.
 * ***getId()***: returns the id of the table.
+
+### Clearing table
+In order to clear the table, ***clear()*** method can be used. clear method will clear the table model as well as render the table as an empty table.
+
+```javascript
+let myFoliumTable = $('#foliumTableId').FoliumTable();
+
+myFoliumTable.clear();
+```
 
 ### Events
 Folium is supporting only 2 events for now which are row click and row double click events. More events will be coming up in the next releases. To manipulate the events, **on()** method is used.

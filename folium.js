@@ -70,9 +70,9 @@ class FoliumTable {
             selectedRow = rowIndex;
             selectedRowId = settings.rows[rowIndexToModel(rowIndex)]._ROW_ID;
             if (selectedRowObject !== undefined) selectedRowObject.removeClass('selectedRow');
-            const domRowIndex = new Number(rowIndex + 1).toString();
+            const domRowIndex = new Number(rowIndex).toString();
     
-            selectedRowObject = $(`#${tableId} tr:eq(${domRowIndex})`);
+            selectedRowObject = $(`#${tableId} tbody tr:eq(${domRowIndex})`);
             selectedRowObject.focus();
             selectedRowObject.addClass('selectedRow');
         }
@@ -81,16 +81,16 @@ class FoliumTable {
             if (columnIndex >= columnCount) return;
             if(tableId !== $(document).attr('activeTable')) return;
             
-            $(`#${tableId} th:eq(${selectedColumn})`).removeClass('selectedColumnHeader');
+            $(`#${tableId} thead th:eq(${selectedColumn})`).removeClass('selectedColumnHeader');
             selectedColumn = columnIndex;
     
             if (selectedColumnObject !== undefined) selectedColumnObject.removeClass('selectedColumn');
     
-            const domRowIndex = new Number(selectedRow + 1).toString();
+            const domRowIndex = new Number(selectedRow).toString();
             
-            selectedColumnObject = $(`#${tableId} tr:eq(${domRowIndex})`).find(`td:eq(${columnIndex})`);
+            selectedColumnObject = $(`#${tableId} tbody tr:eq(${domRowIndex})`).find(`td:eq(${columnIndex})`);
             selectedColumnObject.addClass('selectedColumn');
-            $(`#${tableId} th:eq(${selectedColumn})`).addClass('selectedColumnHeader');
+            $(`#${tableId} thead th:eq(${selectedColumn})`).addClass('selectedColumnHeader');
             selectedColumnObject.focus();
         }
     
@@ -221,7 +221,7 @@ class FoliumTable {
                 selectedColumnObject = selectedTdObject;       
             }
     
-        $(`#${tableId}`).on('click', 'td', function(){
+        $(`#${tableId} tbody`).on('click', 'td', function(){
             const selectedRowObject = $(this).parent();
             const selectedColumnObject = $(this);
     
@@ -233,7 +233,7 @@ class FoliumTable {
             events.get('rowClicked')(rowIndex);
          });
     
-         $(`#${settings.tableId} td`).dblclick(function() {
+         $(`#${settings.tableId} tbody td`).dblclick(function() {
             const selectedRowObject = $(this).parent();
             const rowIndex = selectedRowObject.index();
     
@@ -379,7 +379,7 @@ class FoliumTable {
         });
 
          // Sorting event
-         $(`#${tableId} th`).click(function() {
+         $(`#${tableId} thead th`).click(function() {
             const selectedHeaderIndex = $(this).index();
             sortingColumnIndex = selectedHeaderIndex;
             setSelectedColumn(selectedHeaderIndex);
@@ -572,9 +572,7 @@ class FoliumTable {
             // Change the row class
             for (let i = index ; i < rowCount ; i++) {
                 const rowClass = i % 2 === 0 ? 'evenRow' : 'oddRow';
-                const updateIndex = i + 1;
-    
-                $(`#${tableId} tr:eq(${updateIndex})`).removeClass().addClass(rowClass);
+                $(`#${tableId} tbody tr:eq(${i})`).removeClass().addClass(rowClass);
             }
     
         };
@@ -677,10 +675,10 @@ class FoliumTable {
 
             searchingActive = true;
             
-            if (settings.showSearchHint)
+            if (settings.pagination.active && settings.showSearchHint)
                 $('#searchInfo').html(`Search Results for "${searchText}" presented` + (columnIndex !== -1 ? ` according to <b>${settings.columns[columnIndex].displayText}</b> column.` : '.'));
             
-                return searchResult.length;
+            return searchResult.length;
         };
 
         _object.clear = function() {
