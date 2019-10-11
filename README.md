@@ -95,6 +95,21 @@ let myFoliumTable = $('#foliumTableId').FoliumTable();
 myFoliumTable.search('John');
 ```
 
+### Pagination
+
+![pagination](https://raw.githubusercontent.com/cemozden/folium/master/readme_pics/pagination.png)
+
+Table pagination can be activated by assigning an object for the **pagination** property of the table settings. Folium generates pagination bar on top of the table to navigate through pages. It generates First, Previous, Next and Last page buttons. Pagination bar is supported with pagination information box regarding which page is currently presented, how many pages exist etc. 
+
+```javascript
+const tableSettings = {
+  ...
+  // active property must be set to true to show the pagination bar
+  // size property is to set how many entries will be presented in each pages.
+  pagination : {active : true, size : 10},
+};
+```
+
 ### Sortable table
 
 By default, Folium tables are not sortable. In order to activate sorting, ***sortable*** parameter must be defined and assigned to "**true**".
@@ -200,21 +215,6 @@ Folium allows programmers to change how to render the headers of the table. This
 * *columnIndex*: The column index of the header that is being rendered at the moment.
 * *displayText*: The display text of the header which is defined in the table settings.
 * *columnObject*: The column object defined in columns model for the column that is being rendered at the moment.
-
-### Pagination
-
-![pagination](https://raw.githubusercontent.com/cemozden/folium/master/readme_pics/pagination.png)
-
-Table pagination can be activated by assigning an object for the **pagination** property of the table settings. Folium generates pagination bar on top of the table to navigate through pages. It generates First, Previous, Next and Last page buttons. Pagination bar is supported with pagination information box regarding which page is currently presented, how many pages exist etc. 
-
-```javascript
-const tableSettings = {
-  ...
-  // active property must be set to true to show the pagination bar
-  // size property is to set how many entries will be presented in each pages.
-  pagination : {active : true, size : 10},
-};
-```
 
 ### Adding, Updating, Removing Rows
 

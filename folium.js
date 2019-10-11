@@ -1,5 +1,5 @@
 /**
- * FoliumTable Version: 1.1.0-BETA 
+ * FoliumTable Version: 1.1.1-BETA 
  */
 class FoliumTable {
 
@@ -440,17 +440,21 @@ class FoliumTable {
             
             Object.defineProperty(rowObject, '_ROW_ID', {value : nextRowId, writable : false, enumerable : true, configurable : false});
             nextRowId++;
-
+            
             settings.rows.push(rowObject);
+            let newRowPosition = rowCount === 0 ? 0 : rowCount;
+            
             rowCount += 1;
+            
             // If searching is active then render the table with search result by calling search function again.
-            if (searchText !== '') {
+            if (searchingActive) {
                 this.search(searchText, searchColumnIndex);
                 return;
             }
             
             if (sortingColumnIndex !== -1) {
                 sortTable(sortingColumnIndex, false);
+                newRowPosition = settings.rows.map(row => row._ROW_ID).indexOf(rowObject._ROW_ID);
             }
 
             if (settings.pagination.active) {
@@ -458,48 +462,59 @@ class FoliumTable {
                 return;
             }
             
-            const rowClass = (rowCount - 1) % 2 === 0 ? 'evenRow' : 'oddRow';
+            const rowClass = newRowPosition % 2 === 0 ? 'evenRow' : 'oddRow';
             let rowHTML = `<tr class="${rowClass}">`;
             
             settings.columns.forEach((column, columnIndex) => {
                 const columnValue = rowsAsArrays ? rowObject[columnIndex] : rowObject[column.columnId];
     
                 // Render the value presented from the settings.
-                const value = cellRenderer(rowCount - 1, columnIndex, columnValue, rowObject);
+                const value = cellRenderer(newRowPosition, columnIndex, columnValue, rowObject);
                 const tdOutput = columnValue === undefined ? '<td></td>' : `<td>${value}</td>`;
                 rowHTML += tdOutput;
             });
     
             rowHTML += '</tr>';
+            rowIdsRendered.push(rowObject._ROW_ID);
 
-            $(`#${tableId} tbody`).append(rowHTML);
+            if (rowCount === 1) $(`#${tableId} tbody`).append(rowHTML);
+            else if (newRowPosition === 0) $(`#${tableId} tbody tr:eq(0)`).before(rowHTML);
+            else $(`#${tableId} tbody tr:eq(${newRowPosition - 1})`).after(rowHTML);
         };
         _object.addRows = function(rows) {
 
-            rows.forEach((row, index) => {
+            rows.forEach(row => {
                 Object.defineProperty(row, '_ROW_ID', {value : nextRowId, writable : false, enumerable : true, configurable : false})
                 nextRowId++;  
             });
             settings.rows = settings.rows.concat(rows);
             //rowCount += rows.length;
 
-            if (searchText !== '') {
+            if (searchingActive) {
                 this.search(searchText, searchColumnIndex);
                 return;
             }
 
-            if (sortingColumnIndex !== -1) {
+            if (sortingColumnIndex !== -1) 
                 sortTable(sortingColumnIndex, false);
-            }
+            
 
             if (settings.pagination.active) {
                 updateTableByPagination();
                 return;
             }
+
+            // If sorting is active then re-render the whole table.
+            if (sortingColumnIndex !== -1) {
+                $(`#${tableId} tbody`).empty();
+                initRows(searchingActive ? searchResult : settings.rows);
+                return;
+            }
+            
             let rowsHTML = '';
 
             rows.forEach(rowObject => {
-                const rowClass = (rowCount - 1) % 2 === 0 ? 'evenRow' : 'oddRow';
+                const rowClass = rowCount % 2 === 0 ? 'evenRow' : 'oddRow';
                 let rowHTML = `<tr class="${rowClass}">`;
                 
                 settings.columns.forEach((column, columnIndex) => {
@@ -513,10 +528,14 @@ class FoliumTable {
         
                 rowHTML += '</tr>';
                 rowsHTML += rowHTML;
+
                 rowCount++;
+                rowIdsRendered.push(rowObject._ROW_ID);
+
             });
 
             $(`#${tableId} tbody`).append(rowsHTML);
+
         };
     
         _object.updateRow = function(index, rowObject) {
@@ -541,7 +560,7 @@ class FoliumTable {
         };
 
         _object.updateRows = function(indexes, rows) {
-            indexes.forEach(i => this.updateRow(i, rows[i]));
+            indexes.forEach((i, elemIndex) => this.updateRow(i, rows[elemIndex]));
         };
     
         _object.deleteRow = function(index) {
@@ -560,21 +579,25 @@ class FoliumTable {
                 return;
             }
 
-            const domTableRemoveIndex = rowIdsRendered.indexOf(removedRow._ROW_ID);
-
+            const rowTableDeleteIndex = rowIdsRendered.indexOf(removedRow._ROW_ID);
+            rowIdsRendered.splice(rowTableDeleteIndex, 1);
             // If the removed row is not rendered on the page then skip removing.
-            if (domTableRemoveIndex === -1) return;
+            if (rowTableDeleteIndex !== -1)  {
+                console.log(rowTableDeleteIndex);
+            
+                if (rowTableDeleteIndex === -1) return;
 
-            setSelectedRow(domTableRemoveIndex !== 0 ? domTableRemoveIndex - 1 : 0);
+                setSelectedRow(rowTableDeleteIndex !== 0 ? rowTableDeleteIndex - 1 : 0);
 
-            $(`#${tableId} tbody tr:eq(${domTableRemoveIndex})`).remove();
-    
-            // Change the row class
-            for (let i = index ; i < rowCount ; i++) {
-                const rowClass = i % 2 === 0 ? 'evenRow' : 'oddRow';
-                $(`#${tableId} tbody tr:eq(${i})`).removeClass().addClass(rowClass);
+                $(`#${tableId} tbody tr:eq(${rowTableDeleteIndex})`).remove();
+        
+                // Change the row class
+                for (let i = index ; i < rowCount ; i++) {
+                    const rowClass = i % 2 === 0 ? 'evenRow' : 'oddRow';
+                    $(`#${tableId} tbody tr:eq(${i})`).removeClass().addClass(rowClass);
+                }    
             }
-    
+            
         };
         _object.deleteRows = function(indexes) {
             const indexesToBeRemoved = indexes.filter(index => index < rowCount);
