@@ -1,5 +1,5 @@
 # Folium NodeJS BETA
-Foluim Table, A jQuery table plugin that powers NodeJS desktop applications by providing easy-to-use HTML tables which are distinctively applied to JavaScript desktop applications.
+Folium Table, A jQuery table plugin that powers NodeJS desktop applications by providing easy-to-use HTML tables.
 
 ![tableGif](https://raw.githubusercontent.com/cemozden/folium/master/readme_pics/table.gif)
 
