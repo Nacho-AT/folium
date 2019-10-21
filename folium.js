@@ -1,5 +1,5 @@
 /**
- * FoliumTable Version: 1.1.1-BETA 
+ * FoliumTable Version: 1.1.2-BETA 
  */
 class FoliumTable {
 
@@ -540,7 +540,10 @@ class FoliumTable {
     
         _object.updateRow = function(index, rowObject) {
     
-            if (rowsAsArrays) settings.rows[index] = rowObject;
+            if (rowsAsArrays) {
+                Object.defineProperty(rowObject, '_ROW_ID', {value : settings.rows[index]._ROW_ID, writable : false, enumerable : true, configurable : false});
+                settings.rows[index] = rowObject;
+            }
             else Object.keys(rowObject).forEach(property => settings.rows[index][property] = rowObject[property]);
     
             const rowToUpdate = settings.rows[index];
