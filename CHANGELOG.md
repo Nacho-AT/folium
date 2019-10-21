@@ -1,5 +1,8 @@
 # Changelog
 
+## v1.1.2
+* A bug that causes not to re-render the table when a row is updated in rows as array mode.
+
 ## v1.1.1
 * Fixed a bug that caused to update wrong rows.
 * Fixed a bug that caused not to render new rows when pagination is not active.
