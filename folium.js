@@ -26,7 +26,7 @@ class FoliumTable {
         let cellRenderer = undefined;
         let headerRenderer = undefined;
         let tableLocale = 'en-US';
-        let searchText = '';
+        let searchFunction = function(row) { return true; };
         let searchingActive = false;
         let searchColumnIndex = -1;
         let sortingColumnIndex = -1;
@@ -448,7 +448,7 @@ class FoliumTable {
             
             // If searching is active then render the table with search result by calling search function again.
             if (searchingActive) {
-                this.search(searchText, searchColumnIndex);
+                this.search(searchFunction);
                 return;
             }
             
@@ -491,7 +491,7 @@ class FoliumTable {
             //rowCount += rows.length;
 
             if (searchingActive) {
-                this.search(searchText, searchColumnIndex);
+                this.search(searchFunction);
                 return;
             }
 
@@ -574,7 +574,7 @@ class FoliumTable {
             rowCount -= 1;
             // If searching is active then render the table with search result by callcing search function again.
             if (searchingActive) {
-                this.search(searchText, searchColumnIndex);
+                this.search(searchFunction);
                 return;
             }
             if (settings.pagination.active) {
@@ -609,7 +609,7 @@ class FoliumTable {
 
             // If searching is active then render the table with search result by callcing search function again.
             if (searchingActive) {
-                this.search(searchText, searchColumnIndex);
+                this.search(searchFunction);
                 return;
             }
             if (settings.pagination.active) {
@@ -663,12 +663,12 @@ class FoliumTable {
             tableLocale = locale;
         };
 
-        _object.search = function(value, columnIndex = -1) {
+        _object.search = function(fn) {
     
-            // If the text is empty or undefined then return original rows.
-            if (value === undefined || value === null || value === '') {
+            // If the function is not provided or undefined then return original rows.
+            if (fn === undefined || fn === null) {
                 searchResult = undefined;
-                searchText = '';
+                searchFunction = function(row) { return true; };
                 searchingActive = false;
                 $('#searchInfo').html('');
                 if (settings.pagination.active) {
@@ -680,16 +680,8 @@ class FoliumTable {
                 return settings.rows.length;
             }
 
-            searchText = value;
-            
-            if (rowsAsArrays) {
-                if (columnIndex !== -1) searchResult = settings.rows.filter(row => row[columnIndex].toLowerCase(tableLocale).includes(value.toLowerCase(tableLocale))); 
-                else searchResult = settings.rows.filter(row => Object.values(row).join('`').toLowerCase(tableLocale).includes(value.toLowerCase(tableLocale)));
-            }
-            else {
-                if (columnIndex !== -1) searchResult = settings.rows.filter(row => row[settings.columns[columnIndex].columnId].toLowerCase(tableLocale).includes(value.toLowerCase(tableLocale))); 
-                else searchResult = settings.rows.filter(row => Object.values(row).join('`').toLowerCase(tableLocale).includes(value.toLowerCase(tableLocale)));
-            }
+            searchFunction = fn;
+            searchResult = settings.rows.filter(row => fn(row));
             
             $(`#${settings.tableId} tbody`).remove();
             
@@ -702,7 +694,7 @@ class FoliumTable {
             searchingActive = true;
             
             if (settings.pagination.active && settings.showSearchHint)
-                $('#searchInfo').html(`Search Results for "${searchText}" presented` + (columnIndex !== -1 ? ` according to <b>${settings.columns[columnIndex].displayText}</b> column.` : '.'));
+                $('#searchInfo').html('Search results presented.');
             
             return searchResult.length;
         };
