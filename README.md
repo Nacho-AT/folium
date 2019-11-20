@@ -123,11 +123,13 @@ To sort the table, clicking the table header will sort the table in ascending, d
 
 ### Searching table
 
-Folium Table supports searching by providing ***search(searchText, columnIndex = -1)*** function. Since Folium's approach is for designing desktop application tables. It does not create a search input box by default. It lets programmers to decide how they want to use this functionality. **searchText** parameter is for searching the text on the entire rows of the table. The second parameter **columnIndex** is an optional parameter which search text will be applied to a specific column. When search() function succeeds, it renders the table with the filtered result and returns the number of filtered rows.  
+Folium Table supports searching by providing ***search(fn)*** function. Since Folium's approach is for designing desktop application tables. It does not create a search input box by default. It lets programmers to decide how they want to use this functionality. 
+
+**fn(row)** parameter is a function that returns boolean for searching on the table. ***row*** parameter represents each row defined in the model. **fn** function will be called for each row while searching in the model. When it returns *true*, the **row** defined in the model will be filtered and presented in the search result set otherwise the row will not be evaluated at all. When search(fn) function succeeds, it renders the table with the filtered result and returns the number of filtered rows.  
 If pagination is active, An information message regarding searching is presented on the pagination bar.
 
 ```html
-<input type="text" id="searchBox" />
+<input type="text" id="nameSearchBox" />
 ```
 
 ```javascript
@@ -135,13 +137,14 @@ const foliumTable = $('#foliumTableId').FoliumTable();
 
 // Search the table after searchBox (ex: input box) input text is updated.
 
-$('#searchBox').change(function(){
-    const searchBoxText = $('#searchBox').val();
+$('#nameSearchBox').change(function(){
+    const searchBoxText = $('#nameSearchBox').val();
 
-    foliumTable.search(searchBoxText);
+    foliumTable.search(function(row) {
+      // Search for rows which has John value in its name field.
+      return row.name.includes('John');
+    });
 
-    // Optional search searchBoxText in zeroth column (first column)
-    foliumTable.search(searchBoxText, 0);
 });
 ```
 
@@ -155,6 +158,20 @@ By default, The search hint is presented on pagination bar, In order to disable 
 const tableSettings = {
 ...
 showSearchHint : false
+};
+```
+
+#### How to define custom search tip text?
+
+By default, The search hint is presented on pagination bar as the default value "(numberOfRows) rows presented." In order to change this behaviour, ***searchTipText(numRowsFiltered)*** function could be implemented in table settings. *numRowsFiltered* represents the number of rows filtered of the search result.
+
+```javascript
+const tableSettings = {
+...
+  searchTipText : function(numRowsFiltered) {
+      const nameSearchBoxVal = $('#nameSearchBox').val();
+      return `Search results for  "${nameSearchBoxVal}" presented according to <span style="font-weight: bold;">Name</span> column.`;
+  }
 };
 ```
 
@@ -269,6 +286,7 @@ Folium provides programmers table state information by the following methods
 * ***selectedRow()***: returns the selected row index on the current page if no row selected, it returns -1.
 * ***selectedRowInModel()*** returns the selected row index according to the table model. In case of pagination active, this function should be used to receive the exact row index in the model.
 * ***selectedColumn()***: returns the selected column index if no columns selected, it returns -1.
+* ***getColumn(columnIndex)***: returns the column object defined in the columns model using *column index*.
 * ***columnCount()***: returns the number of columns defined in the table.
 * ***rowCount()***: returns the number of rows in the table.
 * ***getRow(index)***: returns the row from the model according to the index parameter.
