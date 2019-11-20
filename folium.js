@@ -634,6 +634,9 @@ class FoliumTable {
         _object.selectedColumn = function() {
             return selectedColumn;
         };
+        _object.getColumn = function(index) {
+            return settings.columns[index];
+        }
         _object.columnCount = function() {
             return columnCount;
         };
