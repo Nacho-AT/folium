@@ -2,7 +2,8 @@
 
 ## v1.1.3-BETA
 * Search function implementation is rewritten. custom search function parameter implemented.
-* searchTipText table setting added in order to customize search result tip text. 
+* searchTipText table setting added in order to customize search result tip text.
+* getColumn(columnIndex) added to retrieve the specific column object from column model using columnIndex parameter.
 
 ## v1.1.2-BETA
 * A bug that causes not to re-render the table when a row is updated in rows as array mode.
