@@ -1,5 +1,5 @@
 /**
- * FoliumTable Version: 1.1.2-BETA 
+ * FoliumTable Version: 1.1.3-BETA 
  */
 class FoliumTable {
 
@@ -634,8 +634,8 @@ class FoliumTable {
         _object.selectedColumn = function() {
             return selectedColumn;
         };
-        _object.getColumn = function(index) {
-            return settings.columns[index];
+        _object.getColumn = function(columnIndex) {
+            return settings.columns[columnIndex];
         }
         _object.columnCount = function() {
             return columnCount;
