@@ -47,7 +47,10 @@ class FoliumTable {
         settings.sortable = settings.sortable === undefined || typeof settings.sortable !== 'boolean' ? false : settings.sortable;
         settings.editable = settings.editable === undefined || typeof settings.editable !== 'boolean' ? false : settings.editable;
         settings.showSearchHint = settings.showSearchHint === undefined || typeof settings.showSearchHint !== 'boolean' ? true : settings.showSearchHint;
-        
+        settings.searchTipText = settings.searchTipText === undefined || settings.searchTipText === null 
+            ? function(numRowsFiltered) { return `${numRowsFiltered} row(s) presented.`; } 
+            : settings.searchTipText;
+
         // If _ROW_ID column id exist then don't let the table to be drawn.
         if(settings.columns.filter(column => column.columnId === '_ROW_ID').length > 0) {
             console.error('_ROW_ID is specifically defined column for Folium Table. Please try to name this column with a different name.');
@@ -694,7 +697,7 @@ class FoliumTable {
             searchingActive = true;
             
             if (settings.pagination.active && settings.showSearchHint)
-                $('#searchInfo').html('Search results presented.');
+                $('#searchInfo').html(settings.searchTipText(searchResult.length));
             
             return searchResult.length;
         };
